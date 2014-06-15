@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema 
+	xmlns="http://www.w3.org/2001/XMLSchema" 
+	targetNamespace="http://www.linuxmaker.com/FeeCalculator" 
+	xmlns:cc="http://www.linuxmaker.com/FeeCalculator" 
+	elementFormDefault="qualified">
+	<element name="costcalculator">
+		<complexType>
+			<sequence>
+				<element name="city" type="cc:city" maxOccurs="unbounded" />
+			</sequence>
+		</complexType>
+	</element>
+	<complexType name="city">
+		<sequence>
+			<element name="distance" type="double" />
+			<element name="duration" type="double" />
+			<element name="monthlyticket" type="double" />
+			<element name="roundtripdticket" type="double"/>
+			<element name="hotelcosts" type="double" />
+			<element name="flightcost" type="double" />
+		</sequence>
+		<attribute name="name" type="string"></attribute>
+	</complexType>
+</schema>
