@@ -8,6 +8,8 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 
 import java.awt.Color;
 
@@ -25,27 +27,30 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 
 import java.awt.Toolkit;
 import java.text.DecimalFormat;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
+
+import com.linuxmaker.calculator.XMLCreator;
 
 /**
  * @author Andreas Günther, IT-LINUXMAKER
  *
  */
-public class ChangeFrame extends JFrame {
+public class ChangeFrame extends JFrame implements ListDataListener {
 
 	private JPanel contentPane;
 	private JTextField RailTicketNormalTextField;
 	private JTextField HotelCostTextField;
 	private JTextField FlightTicketTextField;
+	private DefaultComboBoxModel comboBoxModel;
 	private String city;
 
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		String city = args[0];
 		try {
 			UIManager.setLookAndFeel("com.seaglasslookandfeel.SeaGlassLookAndFeel");
 		} catch (Throwable e) {
@@ -79,9 +84,25 @@ public class ChangeFrame extends JFrame {
 		JLabel CityLabel = new JLabel("Projekt-Stadt");
 		CityLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
 		
-		JComboBox CityComboBox = new JComboBox();
-		CityComboBox.setModel(new DefaultComboBoxModel(new String[] {"Stuttgart", "Ulm", "Ingolstadt"}));
-		CityComboBox.setFont(new Font("Dialog", Font.PLAIN, 11));
+		JComboBox targetCityComboBox = new JComboBox<String>();
+		/*
+		 * Städte in Liste einlesen
+		 */
+		Vector<String> cities = new Vector<String>();
+		XMLCreator cityList = new XMLCreator();
+		for (int i = 0; i < cityList.CityList().size(); i++) {
+			cities.add(cityList.CityList().get(i));
+		}
+		/*
+		 * ComboBoxModel erzeugen
+		 */
+		comboBoxModel = new DefaultComboBoxModel<String>(cities);
+		comboBoxModel.addListDataListener(this);
+		/*
+		 * ComboBoxModel setzen
+		 */
+		targetCityComboBox.setModel(comboBoxModel);
+		targetCityComboBox.setFont(new Font("Dialog", Font.PLAIN, 11));
 		
 		JLabel RailTicketNormalLabel = new JLabel("Hin-/Rückfahrt-Ticket");
 		RailTicketNormalLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
@@ -140,7 +161,7 @@ public class ChangeFrame extends JFrame {
 						.addGroup(gl_contentPane.createSequentialGroup()
 							.addComponent(CityLabel)
 							.addGap(18)
-							.addComponent(CityComboBox, GroupLayout.PREFERRED_SIZE, 196, GroupLayout.PREFERRED_SIZE))
+							.addComponent(targetCityComboBox, GroupLayout.PREFERRED_SIZE, 196, GroupLayout.PREFERRED_SIZE))
 						.addGroup(gl_contentPane.createSequentialGroup()
 							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 								.addComponent(RailTicketNormalLabel, GroupLayout.PREFERRED_SIZE, 126, GroupLayout.PREFERRED_SIZE)
@@ -176,7 +197,7 @@ public class ChangeFrame extends JFrame {
 					.addContainerGap()
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(CityLabel)
-						.addComponent(CityComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+						.addComponent(targetCityComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
 					.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 						.addComponent(RailTicketNormalLabel)
@@ -208,5 +229,23 @@ public class ChangeFrame extends JFrame {
 					.addGap(31))
 		);
 		contentPane.setLayout(gl_contentPane);
+	}
+
+	@Override
+	public void contentsChanged(ListDataEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void intervalAdded(ListDataEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void intervalRemoved(ListDataEvent arg0) {
+		// TODO Auto-generated method stub
+		
 	}
 }
