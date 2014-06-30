@@ -11,13 +11,11 @@ import static com.linuxmaker.calculator.Constants.ELEMENT_FLIGHTCOST;
 import static com.linuxmaker.calculator.Constants.ELEMENT_HOTEL;
 import static com.linuxmaker.calculator.Constants.ELEMENT_TICKET;
 import static com.linuxmaker.calculator.Constants.ELEMENT_DTICKET;
-import static com.linuxmaker.calculator.Constants.ORIGIN_CITY;
-import static com.linuxmaker.calculator.Constants.PATH;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -38,14 +36,15 @@ import org.xml.sax.SAXException;
  *
  */
 public class XMLCreator {
-	private String path = System.getProperties().getProperty("user.home")+File.separator+PATH+File.separator+ORIGIN_CITY+"City.xml";
+	private String folder = new Settings().readSettings("directory");
+	private String path = System.getProperties().getProperty("user.home")+File.separator+folder+File.separator+new Settings().readSettings("pointOfDeparture")+"City.xml";
 	/*
 	 * Abfrage, ob xml-Datei bereits existiert!!!
 	 */
 	private File xmlFile = new File(path);
 	private Namespace ns = Namespace.getNamespace("http://www.linuxmaker.com/Preiskalkulator");
-	String origin = "Stuttgart";
-	String target;
+	String origin = new Settings().readSettings("pointOfDeparture");
+	String cityName;
 	String ticket = "0.0";
 	String hotel = "0.0";
 	String flightcost = "0.0";
@@ -54,7 +53,7 @@ public class XMLCreator {
 		super();
 	}
 	
-	public void writeXML(String target, String ticket, String dticket, String hotel, String flightcost) throws XPathExpressionException, SAXException, ParserConfigurationException, JDOMException {
+	public void writeXML(String cityName, String ticket, String dticket, String hotel, String flightcost) throws XPathExpressionException, SAXException, ParserConfigurationException, JDOMException {
 		Parser distance = new Parser();
 		Parser duration = new Parser();
 		try {
@@ -63,9 +62,9 @@ public class XMLCreator {
 
 			Element xmlRoot = document.getRootElement();
 			Element city = new Element(ELEMENT_CITY);
-			city.setAttribute(ATTRIBUTE_NAME, target);
-			city.addContent(new Element(ELEMENT_DISTANCE).setText(String.valueOf(distance.parsedistance(origin, target))));
-			city.addContent(new Element(ELEMENT_DURATION).setText(String.valueOf(duration.parseduration(origin, target))));
+			city.setAttribute(ATTRIBUTE_NAME, cityName);
+			city.addContent(new Element(ELEMENT_DISTANCE).setText(String.valueOf(distance.parsedistance(origin, cityName))));
+			city.addContent(new Element(ELEMENT_DURATION).setText(String.valueOf(duration.parseduration(origin, cityName))));
 			city.addContent(new Element(ELEMENT_TICKET).setText(ticket));
 			city.addContent(new Element(ELEMENT_DTICKET).setText(dticket));
 			city.addContent(new Element(ELEMENT_HOTEL).setText(hotel));
@@ -83,7 +82,7 @@ public class XMLCreator {
 	}
 	
 	@SuppressWarnings({ "unchecked", "deprecation" })
-	public List<String> readXML(String target) {
+	public List<String> readXML(String cityName) {
 		List<String> results  = new ArrayList<String>();
 		Document doc;
 		try {
@@ -94,14 +93,14 @@ public class XMLCreator {
 			nodes = (List<Element>) XPath.selectNodes(doc, "/costcalculator/city");
 				
 			for (Element element : nodes) {
-				if (target.equals(element.getAttributeValue("name"))) {
+				if (cityName.equals(element.getAttributeValue("name"))) {
 					results.add(element.getAttributeValue("name"));
-					results.add(element.getChildText("distance"));
-					results.add(element.getChildText("duration"));
-					results.add(element.getChildText("monthlyticket"));
-					results.add(element.getChildText("roundtripdticket"));
-					results.add(element.getChildText("hotelcosts"));
-					results.add(element.getChildText("flightcost"));	
+					results.add(element.getChildText(ELEMENT_DISTANCE));
+					results.add(element.getChildText(ELEMENT_DURATION));
+					results.add(element.getChildText(ELEMENT_TICKET));
+					results.add(element.getChildText(ELEMENT_DTICKET));
+					results.add(element.getChildText(ELEMENT_HOTEL));
+					results.add(element.getChildText(ELEMENT_FLIGHTCOST));	
 				} 
 			}
 		} catch (JDOMException | IOException e) {
@@ -111,19 +110,35 @@ public class XMLCreator {
 	}
 
 	@SuppressWarnings({ "deprecation", "unchecked" })
-	public void changeXML(String target, String value) {
-		List<String> elements  = new ArrayList<String>();
-		Document doc;
+	public void changeXML(String cityName, String varMonthlyTicket, String varRoundTripTicket, String varHotel, String varFlightTicket) {
 		try {
 			SAXBuilder builder = new SAXBuilder();
-			doc = (Document) builder.build(xmlFile);
-			List<Element> nodes;
-			nodes = (List<Element>) XPath.selectNodes(doc, "/costcalculator/city");
+			Document doc = (Document) builder.build(xmlFile);
+
+			Element costCalculator = doc.getRootElement();
 			
-			for (Element element : nodes) {
-				if (target.equals(element.getAttributeValue("name"))) {
-					elements.set(5, value);
+			Iterator<?> cityList = costCalculator.getChildren(ELEMENT_CITY).iterator();
+			while (cityList.hasNext()) {
+				Element city = (Element) cityList.next();
+				if (cityName.equals(city.getAttribute("name").getValue())) {
+					Element monthlyTicket = new Element(ELEMENT_TICKET);
+					monthlyTicket.addContent(varMonthlyTicket);
+					city.removeChild(ELEMENT_TICKET);
+					city.addContent(monthlyTicket);
+					Element roundTripTicket = new Element(ELEMENT_DTICKET);
+					roundTripTicket.addContent(varRoundTripTicket);
+					city.removeChild(ELEMENT_DTICKET);
+					city.addContent(roundTripTicket);
+					Element hotelCost = new Element(ELEMENT_HOTEL);
+					hotelCost.addContent(varHotel);
+					city.removeChild(ELEMENT_HOTEL);
+					city.addContent(hotelCost);
+					Element flightTicket = new Element(ELEMENT_FLIGHTCOST);
+					flightTicket.addContent(varFlightTicket);
+					city.removeChild(ELEMENT_FLIGHTCOST);
+					city.addContent(flightTicket);
 				}
+				
 			}
 			
 			XMLOutputter xmlOutput = new XMLOutputter();
@@ -133,6 +148,7 @@ public class XMLCreator {
 		} catch (JDOMException | IOException e) {
 			e.printStackTrace();
 		}
+		
 	}
 	
 	@SuppressWarnings({ "deprecation", "unchecked" })

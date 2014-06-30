@@ -55,7 +55,7 @@ public class Fee {
 	 * Methode für die Fälle Normalticket oder Flugticket, wöchentliches Pendeln und Übernachtung
 	 */
 	public Double calculateHonorar(Double fee, Double ticket, Double sconto, Double railBonus, Double hotel, int  overnightStay) {
-		return (fee*(overnightStay + 1) + ticket + hotel*overnightStay)/(overnightStay + 1)*sconto;				
+		return (fee*(overnightStay + 1) + ticket*railBonus + hotel*overnightStay)/(overnightStay + 1)*sconto;				
 	}
 	
 	public Double reCalculateHonorar(Double fee, Double ticket, Double hotel, Double railBonus, int  overnightStay, Double sconto) {

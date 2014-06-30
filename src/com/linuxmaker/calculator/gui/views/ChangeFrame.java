@@ -3,6 +3,7 @@
  */
 package com.linuxmaker.calculator.gui.views;
 
+import java.awt.Container;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
@@ -26,6 +27,8 @@ import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
 import java.util.Vector;
 
@@ -38,14 +41,16 @@ import com.linuxmaker.calculator.XMLCreator;
  * @author Andreas Günther, IT-LINUXMAKER
  *
  */
-public class ChangeFrame extends JFrame implements ListDataListener {
+public class ChangeFrame extends JFrame implements ListDataListener, ActionListener  {
 
 	private JPanel contentPane;
+	private JFormattedTextField RailTicketMonthFTextField;
 	private JTextField RailTicketNormalTextField;
 	private JTextField HotelCostTextField;
 	private JTextField FlightTicketTextField;
+	private JComboBox targetCityComboBox;
 	private DefaultComboBoxModel comboBoxModel;
-	private String city;
+	private XMLCreator element;
 
 	/**
 	 * Launch the application.
@@ -84,7 +89,7 @@ public class ChangeFrame extends JFrame implements ListDataListener {
 		JLabel CityLabel = new JLabel("Projekt-Stadt");
 		CityLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
 		
-		JComboBox targetCityComboBox = new JComboBox<String>();
+		targetCityComboBox = new JComboBox<String>();
 		/*
 		 * Städte in Liste einlesen
 		 */
@@ -103,6 +108,9 @@ public class ChangeFrame extends JFrame implements ListDataListener {
 		 */
 		targetCityComboBox.setModel(comboBoxModel);
 		targetCityComboBox.setFont(new Font("Dialog", Font.PLAIN, 11));
+		targetCityComboBox.addActionListener((ActionListener) this);
+		
+		element = new XMLCreator();
 		
 		JLabel RailTicketNormalLabel = new JLabel("Hin-/Rückfahrt-Ticket");
 		RailTicketNormalLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
@@ -110,7 +118,7 @@ public class ChangeFrame extends JFrame implements ListDataListener {
 		RailTicketNormalTextField = new JTextField();
 		RailTicketNormalTextField.setFont(new Font("Dialog", Font.PLAIN, 11));
 		RailTicketNormalTextField.setColumns(10);
-		RailTicketNormalTextField.setText((String) city);
+		RailTicketNormalTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(4));
 		
 		JLabel RailTicketMonthLabel = new JLabel("Monatsticket");
 		RailTicketMonthLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
@@ -121,6 +129,7 @@ public class ChangeFrame extends JFrame implements ListDataListener {
 		HotelCostTextField = new JTextField();
 		HotelCostTextField.setFont(new Font("Dialog", Font.PLAIN, 11));
 		HotelCostTextField.setColumns(10);
+		HotelCostTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(5));
 		
 		JLabel FlightTicketLabel = new JLabel("Flugticket");
 		FlightTicketLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
@@ -128,6 +137,7 @@ public class ChangeFrame extends JFrame implements ListDataListener {
 		FlightTicketTextField = new JTextField();
 		FlightTicketTextField.setFont(new Font("Dialog", Font.PLAIN, 11));
 		FlightTicketTextField.setColumns(10);
+		FlightTicketTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(6));
 		
 		JLabel cur1Label = new JLabel("EUR");
 		cur1Label.setFont(new Font("Dialog", Font.PLAIN, 11));
@@ -142,17 +152,34 @@ public class ChangeFrame extends JFrame implements ListDataListener {
 		cur4Label.setFont(new Font("Dialog", Font.PLAIN, 11));
 		
 		JButton ChangeButton = new JButton("Ändern");
+		ChangeButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				XMLCreator change = new XMLCreator();
+				change.changeXML((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(0), RailTicketMonthFTextField.getText(), RailTicketNormalTextField.getText(), HotelCostTextField.getText(), FlightTicketTextField.getText());
+			}
+
+		});
 		ChangeButton.setFont(new Font("Dialog", Font.BOLD, 11));
 		
 		JButton DeleteButton = new JButton("Löschen");
 		DeleteButton.setToolTipText("Löschen des Eintrages");
 		DeleteButton.setFont(new Font("Dialog", Font.BOLD, 11));
 		
-		JButton ExitButton = new JButton("Beenden");
-		ExitButton.setFont(new Font("Dialog", Font.BOLD, 11));
+		final JButton closeButton = new JButton("Beenden");
+		closeButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e){
+				Container frame = closeButton.getParent();
+				do
+					frame = frame.getParent();
+				while (!(frame instanceof JFrame));
+				((JFrame) frame).dispose();
+			}
+		});
+		closeButton.setFont(new Font("Dialog", Font.BOLD, 11));
 		
-		JFormattedTextField RailTicketMonthFTextField = new JFormattedTextField(new DecimalFormat("#,##"));
+		RailTicketMonthFTextField = new JFormattedTextField(new DecimalFormat("#,##"));
 		RailTicketMonthFTextField.setFont(new Font("Dialog", Font.PLAIN, 11));
+		RailTicketMonthFTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(3));
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -188,7 +215,7 @@ public class ChangeFrame extends JFrame implements ListDataListener {
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addComponent(DeleteButton)
 					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(ExitButton)
+					.addComponent(closeButton)
 					.addGap(43))
 		);
 		gl_contentPane.setVerticalGroup(
@@ -225,7 +252,7 @@ public class ChangeFrame extends JFrame implements ListDataListener {
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(ChangeButton)
 						.addComponent(DeleteButton)
-						.addComponent(ExitButton))
+						.addComponent(closeButton))
 					.addGap(31))
 		);
 		contentPane.setLayout(gl_contentPane);
@@ -247,5 +274,18 @@ public class ChangeFrame extends JFrame implements ListDataListener {
 	public void intervalRemoved(ListDataEvent arg0) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	 * ActionListener setzt die passenden Werte und setzt die Felder aktiv/inaktiv
+	 */
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		RailTicketMonthFTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(3));
+		RailTicketNormalTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(4));
+		HotelCostTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(5));
+		FlightTicketTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(6));
 	}
 }

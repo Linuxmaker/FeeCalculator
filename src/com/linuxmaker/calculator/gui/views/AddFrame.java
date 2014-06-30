@@ -3,9 +3,8 @@
  */
 package com.linuxmaker.calculator.gui.views;
 
-import static com.linuxmaker.calculator.Constants.ORIGIN_CITY;
-
 import java.awt.EventQueue;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -26,11 +25,13 @@ import org.jdom2.JDOMException;
 import org.xml.sax.SAXException;
 
 import com.linuxmaker.calculator.Parser;
+import com.linuxmaker.calculator.Settings;
 import com.linuxmaker.calculator.XMLCreator;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
+import java.awt.Container;
 import java.awt.Font;
 import java.awt.Color;
 
@@ -59,6 +60,7 @@ public class AddFrame extends JFrame {
 	private JLabel eur3Label;
 	private JLabel eur4Label;
 	private JLabel resultLabel;
+	private String originCity = new Settings().readSettings("pointOfDeparture");
 	/**
 	 * Launch the application.
 	 */
@@ -108,18 +110,18 @@ public class AddFrame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				Parser search = new Parser();
 				try {
-					if (search.parsedistance(ORIGIN_CITY, cityTextField.getText()) <= 420.00) {
+					if (search.parsedistance(originCity, cityTextField.getText()) <= 420.00) {
 						railTicketMonthTextField.setEnabled(true);
 						railTicketTwoTextField.setEnabled(true);
 					} else {
 						railTicketMonthTextField.setEnabled(false);
 						railTicketTwoTextField.setEnabled(true);	
 					}
-					if (search.parseduration(ORIGIN_CITY, cityTextField.getText()) <= 2.5) {
+					if (search.parseduration(originCity, cityTextField.getText()) <= 2.5) {
 						hotelCostsTextField.setEnabled(false);
 					} else {
 						hotelCostsTextField.setEnabled(true);
-						if (search.parseduration(ORIGIN_CITY, cityTextField.getText()) > 5) {
+						if (search.parseduration(originCity, cityTextField.getText()) > 5) {
 							flightTicketTextField.setEnabled(true);
 						}
 					}
@@ -207,7 +209,16 @@ public class AddFrame extends JFrame {
 		});
 		clearButton.setFont(new Font("Dialog", Font.BOLD, 11));
 		
-		JButton closeButton = new JButton("Beenden");
+		final JButton closeButton = new JButton("Beenden");
+		closeButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e){
+				Container frame = closeButton.getParent();
+				do
+					frame = frame.getParent();
+				while (!(frame instanceof JFrame));
+				((JFrame) frame).dispose();
+			}
+		});
 		closeButton.setFont(new Font("Dialog", Font.BOLD, 11));
 		
 		resultLabel = new JLabel("Erfolgreich angelegt!");

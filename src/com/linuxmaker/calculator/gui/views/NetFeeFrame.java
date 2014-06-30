@@ -4,10 +4,10 @@
 package com.linuxmaker.calculator.gui.views;
 
 import static com.linuxmaker.calculator.Constants.ORIGIN_CITY;
-import static com.linuxmaker.calculator.Constants.PATH;
 import static com.linuxmaker.calculator.Constants.WORKINGDAY;
 
 import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
@@ -35,6 +35,7 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JComboBox;
 
 import com.linuxmaker.calculator.Fee;
+import com.linuxmaker.calculator.Settings;
 import com.linuxmaker.calculator.XMLCreator;
 
 import javax.swing.JCheckBox;
@@ -205,9 +206,10 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 			public void actionPerformed(ActionEvent arg0) {
 				XMLCreator xmlelement = new XMLCreator();
 				Fee price = new Fee();
+				String folder = new Settings().readSettings("directory");
 				DecimalFormat f = new DecimalFormat("#0.00");
 				String city = (String) targetCityComboBox.getSelectedItem();
-				String fileName = System.getProperties().getProperty("user.home") + File.separator + PATH + File.separator + originCityTextField.getText() + "City.xml";
+				String fileName = System.getProperties().getProperty("user.home") + File.separator + folder + File.separator + originCityTextField.getText() + "City.xml";
 				File xmlFile = new File(fileName);
 				Double fee = Double.parseDouble(allInFeeTextField.getText());
 				Double travelDistance = Double.parseDouble(xmlelement.readXML(city).get(1));
@@ -414,12 +416,17 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		});
 		resetButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
-		JButton endButton = new JButton("Beenden");
-		endButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+		final JButton closeButton = new JButton("Beenden");
+		closeButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e){
+				Container frame = closeButton.getParent();
+				do
+					frame = frame.getParent();
+				while (!(frame instanceof JFrame));
+				((JFrame) frame).dispose();
 			}
 		});
-		endButton.setFont(new Font("Dialog", Font.BOLD, 12));
+		closeButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
 		cur3Label = new JLabel("EUR");
 		cur3Label.setFont(new Font("Dialog", Font.BOLD, 12));
@@ -469,7 +476,7 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 							.addGap(18)
 							.addComponent(resetButton)
 							.addGap(18)
-							.addComponent(endButton))
+							.addComponent(closeButton))
 						.addGroup(gl_contentPane.createSequentialGroup()
 							.addContainerGap()
 							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -594,7 +601,7 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(calculateButton)
 						.addComponent(resetButton)
-						.addComponent(endButton))
+						.addComponent(closeButton))
 					.addContainerGap(13, Short.MAX_VALUE))
 		);
 		contentPane.setLayout(gl_contentPane);

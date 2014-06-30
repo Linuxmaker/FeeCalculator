@@ -5,6 +5,7 @@ package com.linuxmaker.calculator;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Properties;
@@ -14,13 +15,14 @@ import java.util.Properties;
  *
  */
 public class Settings {
-	private String file = System.getProperties().getProperty("user.home")+File.separator+".settings.cfg";
-	public void generateSettings(String workingHours, String directory, String startCity, String maxDistance){
+	String file = System.getProperties().getProperty("user.home")+File.separator+".settings.cfg";
+	public void generateSettings(String workingHours, String directory, String startCity, String maxDistance, String minFee){
 		Properties settings = new Properties();
 		settings.setProperty("workinghours", workingHours);
 		settings.setProperty("directory", directory);
 		settings.setProperty("pointOfDeparture", startCity);
 		settings.setProperty("maxdistance", maxDistance);
+		settings.setProperty("minFee", minFee);
 		
 		FileWriter writer;
 		try {
@@ -32,11 +34,18 @@ public class Settings {
 		}
 	}
 	
-	public String readSettings(String key) throws IOException {
+	public String readSettings(String key) {
 		Properties properties = new Properties();
-		FileInputStream in = new FileInputStream(file);
-		properties.load(in);
-		in.close();
+		FileInputStream in;
+		try {
+			in = new FileInputStream(file);
+			properties.load(in);
+			in.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return properties.getProperty(key);
 	}
 }

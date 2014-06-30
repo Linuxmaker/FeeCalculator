@@ -3,10 +3,6 @@
  */
 package com.linuxmaker.calculator.gui.views;
 
-import static com.linuxmaker.calculator.Constants.ORIGIN_CITY;
-import static com.linuxmaker.calculator.Constants.PATH;
-import static com.linuxmaker.calculator.Constants.WORKINGDAY;
-
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
@@ -16,6 +12,7 @@ import java.awt.Toolkit;
 import java.awt.Color;
 import java.awt.Font;
 
+import javax.swing.InputVerifier;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
@@ -26,17 +23,22 @@ import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.UIManager;
+import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathExpressionException;
 
+import org.w3c.dom.DOMException;
 import org.xml.sax.SAXException;
 
 import com.linuxmaker.calculator.Fee;
 import com.linuxmaker.calculator.Parser;
+import com.linuxmaker.calculator.Settings;
 import com.linuxmaker.calculator.XMLCreator;
+import com.linuxmaker.calculator.XmlFileWriter;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Vector;
@@ -61,12 +63,16 @@ import javax.swing.Action;
  * @author Andreas Günther, IT-LINUXMAKER
  *
  */
-public class AllinFeeFrame extends JFrame implements ListDataListener {
+public class AllinFeeFrame extends JFrame implements Runnable, ListDataListener {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 8189297737183218936L;
+	private static final InputVerifier OnlyDigitsVerifier = null;
+	private String originCity = new Settings().readSettings("pointOfDeparture");
+	private String path = new Settings().readSettings("directory");
+	private Double workingHours = Double.parseDouble(new Settings().readSettings("workinghours"));
 	private JPanel contentPane;
 	private JTextField originCityTextField;
 	private JTextField feeTextField;
@@ -78,6 +84,10 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 	private JLabel cur5Label;
 	private JLabel dayFlightHonorarLabel;
 	private JLabel hourFlightHonorarLabel;
+	private JLabel dayPriceLabel;
+	private JLabel hourPriceLabel;
+	private JLabel hourHonorarLabel;
+	private JLabel dayHonorarLabel;
 	private JCheckBox scontoCheckBox;
 	private JComboBox scontoComboBox;
 	private Double sconto;
@@ -88,12 +98,13 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 	private JRadioButton railBonus50RadioButton;
 	private JRadioButton railBonus100RadioButton;
 	private JTextField hoursPerDayTextField;
+	private final JComboBox<String> daysProjectComboBox;
 	private final Action action = new SwingAction();
 
 	/**
 	 * Launch the application.
 	 */
-	public static void main(String[] args) {
+	public void run() {
 		try {
 			UIManager.setLookAndFeel("com.seaglasslookandfeel.SeaGlassLookAndFeel");
 		} catch (Throwable e) {
@@ -155,6 +166,11 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		menuEdit.add(menuItemAdd);
 		
 		JMenuItem menuItemChange = new JMenuItem("Ändern");
+		menuItemChange.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				ChangeFrame.main(null);
+			}
+		});
 		menuItemChange.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuEdit.add(menuItemChange);
 		
@@ -185,6 +201,11 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		menuBar.add(menuSettings);
 		
 		JMenuItem menuItemSettings = new JMenuItem("Einstellungen");
+		menuItemSettings.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				SettingsFrame.main(null);
+			}
+		});
 		menuItemSettings.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuSettings.add(menuItemSettings);
 		
@@ -212,7 +233,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		originCityLabel.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
 		
 		originCityTextField = new JTextField();
-		originCityTextField.setText(ORIGIN_CITY);
+		originCityTextField.setText(originCity);
 		originCityTextField.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
 		originCityTextField.setColumns(10);
 		
@@ -220,6 +241,33 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		targetCityLabel.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
 
 		targetCityComboBox = new JComboBox<String>();
+		targetCityComboBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				XMLCreator xmlelement = new XMLCreator();
+				String city = (String) targetCityComboBox.getSelectedItem();
+				if (Double.parseDouble(xmlelement.readXML(city).get(1)) < 420.00 && Double.parseDouble(xmlelement.readXML(city).get(2)) <= 2.5) {
+					daysProjectComboBox.setEnabled(true);
+					overnightStayComboBox.setEnabled(false);
+				} else if (Double.parseDouble(xmlelement.readXML(city).get(1)) < 420.00 && Double.parseDouble(xmlelement.readXML(city).get(2)) > 2.5) {
+					daysProjectComboBox.setEnabled(false);
+					overnightStayComboBox.setEnabled(true);
+				}else {
+					daysProjectComboBox.setEnabled(false);
+					overnightStayComboBox.setEnabled(true);
+					overnightStayComboBox.setSelectedIndex(4);
+				}
+				dayPriceLabel.setVisible(false);
+				hourPriceLabel.setVisible(false);
+				hourHonorarLabel.setVisible(false);
+				dayHonorarLabel.setVisible(false);
+				dayFlightHonorarLabel.setVisible(false);
+				hourFlightHonorarLabel.setVisible(false);
+				cur2Label.setVisible(false);
+				cur3Label.setVisible(false);
+				cur4Label.setVisible(false);
+				cur5Label.setVisible(false);
+			}
+		});
 		/*
 		 * Städte in Liste einlesen
 		 */
@@ -255,26 +303,27 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		JLabel daysProjectLabel = new JLabel("Projekttage Monat");
 		daysProjectLabel.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
 		
-		final JComboBox<String> daysProjectComboBox = new JComboBox<String>();
+		daysProjectComboBox = new JComboBox<String>();
 		daysProjectComboBox.setToolTipText("Projekttage im Monat");
 		daysProjectComboBox.setModel(new DefaultComboBoxModel(new String[] {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"}));
-		daysProjectComboBox.setSelectedIndex(19);
+		daysProjectComboBox.setSelectedIndex(21);
 		daysProjectComboBox.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
+		daysProjectComboBox.setEnabled(true);
 		
-		final JLabel dayPriceLabel = new JLabel("Tageshonorar");
+		dayPriceLabel = new JLabel("Tageshonorar");
 		dayPriceLabel.setFont(new Font("Dialog", Font.BOLD, 12));
-		dayPriceLabel.setVisible(true);
+		dayPriceLabel.setVisible(false);
 		
-		final JLabel hourPriceLabel = new JLabel("Stundenhonorar");
+		hourPriceLabel = new JLabel("Stundenhonorar");
 		hourPriceLabel.setFont(new Font("Dialog", Font.BOLD, 12));
-		hourPriceLabel.setVisible(true);
+		hourPriceLabel.setVisible(false);
 		
-		final JLabel dayHonorarLabel = new JLabel("Honorar");
+		dayHonorarLabel = new JLabel("Honorar");
 		dayHonorarLabel.setFont(new Font("Dialog", Font.BOLD, 12));
 		dayHonorarLabel.setHorizontalAlignment(JLabel.RIGHT);
-		dayHonorarLabel.setVisible(true);
+		dayHonorarLabel.setVisible(false);
 		
-		final JLabel hourHonorarLabel = new JLabel("Honorar");
+		hourHonorarLabel = new JLabel("Honorar");
 		hourHonorarLabel.setFont(new Font("Dialog", Font.BOLD, 12));
 		hourHonorarLabel.setHorizontalAlignment(JLabel.RIGHT);
 		hourHonorarLabel.setVisible(false);
@@ -286,7 +335,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 				Fee price = new Fee();
 				DecimalFormat f = new DecimalFormat("#0.00");
 				String city = (String) targetCityComboBox.getSelectedItem();
-				String fileName = System.getProperties().getProperty("user.home")+ File.separator + PATH + File.separator + originCityTextField.getText() + "City.xml";
+				String fileName = System.getProperties().getProperty("user.home")+ File.separator + path + File.separator + originCityTextField.getText() + "City.xml";
 				File xmlFile = new File(fileName);
 				Double fee = Double.parseDouble(feeTextField.getText());
 				Double travelDistance = Double.parseDouble(xmlelement.readXML(city).get(1));
@@ -297,7 +346,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 				Double flightTicket = Double.parseDouble(xmlelement.readXML(city).get(6));
 				int overnightStay = Integer.valueOf((String) overnightStayComboBox.getSelectedItem());
 				Double hoursPerDay = Double.parseDouble(hoursPerDayTextField.getText());
-				Double factorWorkingHours = price.factorWorkingHours(WORKINGDAY, hoursPerDay);
+				Double factorWorkingHours = price.factorWorkingHours(workingHours, hoursPerDay);
 				int projektdays = Integer.valueOf((String) daysProjectComboBox.getSelectedItem());
 				Double sconto = Double.parseDouble((String) scontoComboBox.getSelectedItem());
 				/*
@@ -504,17 +553,20 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 						}	
 					}
 				} else {
-					JOptionPane.showOptionDialog(null, "Für diese Stadt gibt es noch keine Daten. Sollen diese jetzt angelegt werden?","Fehlende Daten",
-			                JOptionPane.YES_NO_CANCEL_OPTION,
-			                JOptionPane.WARNING_MESSAGE, null, 
-			                new String[]{"A", "B", "C"}, "B");
+					XmlFileWriter newCity = new XmlFileWriter();
+					try {
+						newCity.xmlWrite(originCityTextField.getText());
+						JOptionPane.showMessageDialog(null, "Für die Stadt " + originCityTextField.getText() + " existieren noch keine Einträge!");
+					} catch (DOMException
+							| XPathExpressionException | IOException
+							| SAXException | TransformerException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 		});
 		calculateButton.setFont(new Font("Dialog", Font.BOLD, 12));
-		
-		JButton ClearButton = new JButton("Löschen");
-		ClearButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
 		JButton addButton = new JButton("Hinzufügen");
 		addButton.setFont(new Font("Dialog", Font.BOLD, 12));
@@ -527,7 +579,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		JButton changeButton = new JButton("Ändern");
 		changeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ChangeFrame.main((String[]) targetCityComboBox.getSelectedItem());
+				ChangeFrame.main(null);
 			}
 		});
 		changeButton.setFont(new Font("Dialog", Font.BOLD, 12));
@@ -614,7 +666,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 				scontoComboBox.setSelectedIndex(2);
 				scontoCheckBox.setSelected(true);
 				buttonGroup.clearSelection();
-				hoursPerDayTextField.setText(String.valueOf(WORKINGDAY));
+				hoursPerDayTextField.setText(String.valueOf(workingHours));
 				dayPriceLabel.setVisible(false);
 				hourPriceLabel.setVisible(false);
 				hourHonorarLabel.setVisible(false);
@@ -633,7 +685,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		hoursPerDayLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		hoursPerDayTextField = new JTextField();
-		hoursPerDayTextField.setText(String.valueOf(WORKINGDAY));
+		hoursPerDayTextField.setText(String.valueOf(workingHours));
 		hoursPerDayTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		hoursPerDayTextField.setColumns(10);
 		
@@ -645,19 +697,14 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
 						.addGroup(gl_contentPane.createSequentialGroup()
 							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+								.addComponent(calculateButton)
 								.addGroup(gl_contentPane.createSequentialGroup()
-									.addComponent(ClearButton)
-									.addPreferredGap(ComponentPlacement.UNRELATED)
 									.addComponent(addButton)
-									.addPreferredGap(ComponentPlacement.RELATED)
-									.addComponent(changeButton))
-								.addComponent(calculateButton))
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-								.addComponent(resetButton)
-								.addComponent(railBonus100RadioButton)
-								.addComponent(endButton))
-							.addContainerGap(37, Short.MAX_VALUE))
+									.addPreferredGap(ComponentPlacement.UNRELATED)
+									.addComponent(changeButton)))
+							.addPreferredGap(ComponentPlacement.UNRELATED)
+							.addComponent(resetButton)
+							.addContainerGap(161, Short.MAX_VALUE))
 						.addGroup(gl_contentPane.createSequentialGroup()
 							.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
 								.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING, false)
@@ -675,8 +722,8 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 										.addComponent(dayPriceLabel)
 										.addComponent(hourPriceLabel, GroupLayout.PREFERRED_SIZE, 125, GroupLayout.PREFERRED_SIZE))
 									.addPreferredGap(ComponentPlacement.RELATED)
-									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-										.addGroup(Alignment.TRAILING, gl_contentPane.createSequentialGroup()
+									.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
+										.addGroup(gl_contentPane.createSequentialGroup()
 											.addComponent(hourHonorarLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 											.addGap(18)
 											.addComponent(cur3Label))
@@ -693,7 +740,8 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 										.addGroup(gl_contentPane.createSequentialGroup()
 											.addComponent(dayFlightHonorarLabel)
 											.addPreferredGap(ComponentPlacement.UNRELATED)
-											.addComponent(cur4Label)))
+											.addComponent(cur4Label))
+										.addComponent(endButton, Alignment.TRAILING))
 									.addGap(55)))
 							.addGap(49))))
 				.addGroup(gl_contentPane.createSequentialGroup()
@@ -713,13 +761,6 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 							.addGap(34)))
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING, false)
 						.addGroup(gl_contentPane.createSequentialGroup()
-							.addComponent(daysProjectComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-							.addGap(18)
-							.addComponent(overnightStayLabel)
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(overnightStayComboBox, GroupLayout.PREFERRED_SIZE, 51, GroupLayout.PREFERRED_SIZE)
-							.addGap(126))
-						.addGroup(gl_contentPane.createSequentialGroup()
 							.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
 								.addComponent(originCityTextField, GroupLayout.PREFERRED_SIZE, 262, GroupLayout.PREFERRED_SIZE)
 								.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -728,7 +769,16 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 										.addPreferredGap(ComponentPlacement.RELATED)
 										.addComponent(cur1Label))
 									.addComponent(targetCityComboBox, GroupLayout.PREFERRED_SIZE, 263, GroupLayout.PREFERRED_SIZE)))
-							.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+							.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+						.addGroup(gl_contentPane.createSequentialGroup()
+							.addComponent(daysProjectComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+							.addGap(18)
+							.addComponent(overnightStayLabel)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+								.addComponent(railBonus100RadioButton)
+								.addComponent(overnightStayComboBox, GroupLayout.PREFERRED_SIZE, 51, GroupLayout.PREFERRED_SIZE))
+							.addGap(71))))
 				.addGroup(gl_contentPane.createSequentialGroup()
 					.addContainerGap()
 					.addComponent(originCityLabel, GroupLayout.DEFAULT_SIZE, 172, Short.MAX_VALUE)
@@ -773,8 +823,8 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(railBonus25RadioButton)
-						.addComponent(railBonus100RadioButton)
-						.addComponent(railBonus50RadioButton))
+						.addComponent(railBonus50RadioButton)
+						.addComponent(railBonus100RadioButton))
 					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(dayPriceLabel)
@@ -792,14 +842,13 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(calculateButton)
-						.addComponent(resetButton))
+						.addComponent(endButton))
 					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-						.addComponent(ClearButton)
 						.addComponent(addButton)
 						.addComponent(changeButton)
-						.addComponent(endButton))
-					.addContainerGap(13, Short.MAX_VALUE))
+						.addComponent(resetButton))
+					.addContainerGap(10, Short.MAX_VALUE))
 		);
 		contentPane.setLayout(gl_contentPane);
 	}
@@ -824,6 +873,11 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	/*private void registerValidators() {
+		this.feeTextField.setInputVerifier(this.OnlyDigitsVerifier);
+	}*/
+	
 	private class SwingAction extends AbstractAction {
 		public SwingAction() {
 			putValue(NAME, "SwingAction");
