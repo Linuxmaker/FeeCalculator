@@ -16,6 +16,7 @@ import java.util.Properties;
  */
 public class Settings {
 	String file = System.getProperties().getProperty("user.home")+File.separator+".settings.cfg";
+	String defaultFile = "resources/settings.cfg";
 	public void generateSettings(String workingHours, String directory, String startCity, String maxDistance, String minFee){
 		Properties settings = new Properties();
 		settings.setProperty("workinghours", workingHours);
@@ -38,9 +39,15 @@ public class Settings {
 		Properties properties = new Properties();
 		FileInputStream in;
 		try {
-			in = new FileInputStream(file);
-			properties.load(in);
-			in.close();
+			if (new File(System.getProperties().getProperty("user.home")+File.separator+".settings.cfg").exists()) {
+				in = new FileInputStream(file);
+				properties.load(in);
+				in.close();
+			} else {
+				in = new FileInputStream(defaultFile);
+				properties.load(in);
+				in.close();
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
