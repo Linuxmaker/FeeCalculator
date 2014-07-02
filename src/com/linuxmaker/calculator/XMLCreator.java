@@ -11,6 +11,7 @@ import static com.linuxmaker.calculator.Constants.ELEMENT_FLIGHTCOST;
 import static com.linuxmaker.calculator.Constants.ELEMENT_HOTEL;
 import static com.linuxmaker.calculator.Constants.ELEMENT_TICKET;
 import static com.linuxmaker.calculator.Constants.ELEMENT_DTICKET;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -43,6 +44,7 @@ public class XMLCreator {
 	 */
 	private File xmlFile = new File(path);
 	private Namespace ns = Namespace.getNamespace("http://www.linuxmaker.com/Preiskalkulator");
+	private File defaultXmlFile = new File("resources/City.xml");
 	String origin = new Settings().readSettings("pointOfDeparture");
 	String cityName;
 	String ticket = "0.0";
@@ -156,13 +158,24 @@ public class XMLCreator {
 		Document doc;
 		List<String> CityList = new ArrayList<String>();
 		try {
-			SAXBuilder builder = new SAXBuilder();
-			doc = (Document) builder.build(xmlFile);
+			if (new File(System.getProperties().getProperty("user.home")+File.separator+".settings.cfg").exists()) {
+				SAXBuilder builder = new SAXBuilder();
+				doc = (Document) builder.build(xmlFile);
 
-			List<Element> nodes;
-			nodes = (List<Element>) XPath.selectNodes(doc, "/costcalculator/city");
-			for (Element element : nodes) {
-				CityList.add(element.getAttribute("name").getValue());
+				List<Element> nodes;
+				nodes = (List<Element>) XPath.selectNodes(doc, "/costcalculator/city");
+				for (Element element : nodes) {
+					CityList.add(element.getAttribute("name").getValue());
+				}
+			} else {
+				SAXBuilder builder = new SAXBuilder();
+				doc = (Document) builder.build(defaultXmlFile);
+
+				List<Element> nodes;
+				nodes = (List<Element>) XPath.selectNodes(doc, "/costcalculator/city");
+				for (Element element : nodes) {
+					CityList.add(element.getAttribute("name").getValue());
+				}
 			}
 			
 		} catch (JDOMException | IOException e) {
