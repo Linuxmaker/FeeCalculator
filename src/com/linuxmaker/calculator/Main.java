@@ -3,9 +3,9 @@
  */
 package com.linuxmaker.calculator;
 
-import java.io.File;
+import java.io.FileNotFoundException;
+
 import com.linuxmaker.calculator.gui.views.AllinFeeFrame;
-import com.linuxmaker.calculator.gui.views.SettingsFrame;
 
 
 /**
@@ -13,25 +13,12 @@ import com.linuxmaker.calculator.gui.views.SettingsFrame;
  *
  */
 public class Main {
-
-	/**
-	 * @param args
-	 */
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws FileNotFoundException {
 		Thread splashThread = new Thread(new SplashScreen());
 		splashThread.start();
-		SettingsFrame settings = new SettingsFrame();
 		
-		if (!new File(System.getProperties().getProperty("user.home")+File.separator+".settings.cfg").exists()) {
-			settings.main(null);
-			
-		} else {
-			AllinFeeFrame allinFee = new AllinFeeFrame();
-			allinFee.main(null);
-		}
 		AllinFeeFrame allinFee = new AllinFeeFrame();
 		allinFee.main(null);
 	}
-
 }
