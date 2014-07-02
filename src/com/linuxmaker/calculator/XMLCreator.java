@@ -44,7 +44,7 @@ public class XMLCreator {
 	 */
 	private File xmlFile = new File(path);
 	private Namespace ns = Namespace.getNamespace("http://www.linuxmaker.com/Preiskalkulator");
-	private File defaultXmlFile = new File("resources/City.xml");
+	private File defaultXmlFile = new File("resources"+File.separator+"City.xml");
 	String origin = new Settings().readSettings("pointOfDeparture");
 	String cityName;
 	String ticket = "0.0";

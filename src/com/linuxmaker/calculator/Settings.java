@@ -16,7 +16,7 @@ import java.util.Properties;
  */
 public class Settings {
 	String file = System.getProperties().getProperty("user.home")+File.separator+".settings.cfg";
-	String defaultFile = "resources/settings.cfg";
+	String defaultFile = "resources"+File.separator+"settings.cfg";
 	public void generateSettings(String workingHours, String directory, String startCity, String maxDistance, String minFee){
 		Properties settings = new Properties();
 		settings.setProperty("workinghours", workingHours);
