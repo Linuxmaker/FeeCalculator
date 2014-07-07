@@ -29,8 +29,8 @@ import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.DOMException;
 import org.xml.sax.SAXException;
 
+import com.linuxmaker.calculator.ComboBoxModel;
 import com.linuxmaker.calculator.Fee;
-import com.linuxmaker.calculator.Parser;
 import com.linuxmaker.calculator.Settings;
 import com.linuxmaker.calculator.XMLCreator;
 import com.linuxmaker.calculator.XmlFileWriter;
@@ -38,32 +38,25 @@ import com.linuxmaker.calculator.XmlFileWriter;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.Vector;
-
 import javax.swing.JCheckBox;
 import javax.swing.JMenuBar;
 
-import java.awt.Dimension;
-
 import javax.swing.JRadioButton;
-import javax.swing.JToggleButton;
 import javax.swing.ButtonGroup;
-import javax.swing.SwingConstants;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.AbstractAction;
-import javax.swing.Action;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 
 /**
  * @author Andreas Günther, IT-LINUXMAKER
  *
  */
-public class AllinFeeFrame extends JFrame implements Runnable, ListDataListener {
+public class AllinFeeFrame extends JFrame implements ListDataListener {
 
 	/**
 	 * 
@@ -73,11 +66,14 @@ public class AllinFeeFrame extends JFrame implements Runnable, ListDataListener 
 	private String originCity = new Settings().readSettings("pointOfDeparture");
 	private String path = new Settings().readSettings("directory");
 	private Double workingHours = Double.parseDouble(new Settings().readSettings("workinghours"));
+	private String minFee = new Settings().readSettings("minFee");
+	private String drivingTime = new Settings().readSettings("drivingTime");
+	private String maxDistance = new Settings().readSettings("maxdistance");
 	private JPanel contentPane;
 	private JTextField originCityTextField;
 	private JTextField feeTextField;
 	private JComboBox<String> targetCityComboBox;
-	private DefaultComboBoxModel comboBoxModel;
+	private ComboBoxModel myComboBoxModel;
 	private JLabel cur2Label;
 	private JLabel cur3Label;
 	private JLabel cur4Label;
@@ -89,22 +85,20 @@ public class AllinFeeFrame extends JFrame implements Runnable, ListDataListener 
 	private JLabel hourHonorarLabel;
 	private JLabel dayHonorarLabel;
 	private JCheckBox scontoCheckBox;
-	private JComboBox scontoComboBox;
+	private JComboBox<String> scontoComboBox;
 	private Double sconto;
 	private Double railBonus;
-	private JComboBox overnightStayComboBox;
+	private JComboBox<String> overnightStayComboBox;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	private JRadioButton railBonus25RadioButton;
 	private JRadioButton railBonus50RadioButton;
 	private JRadioButton railBonus100RadioButton;
 	private JTextField hoursPerDayTextField;
 	private final JComboBox<String> daysProjectComboBox;
-	private final Action action = new SwingAction();
-
 	/**
 	 * Launch the application.
 	 */
-	public void run() {
+	public void main(String[] args) {
 		try {
 			UIManager.setLookAndFeel("com.seaglasslookandfeel.SeaGlassLookAndFeel");
 		} catch (Throwable e) {
@@ -115,6 +109,10 @@ public class AllinFeeFrame extends JFrame implements Runnable, ListDataListener 
 				try {
 					AllinFeeFrame frame = new AllinFeeFrame();
 					frame.setVisible(true);
+					if (originCity.equals("Musterstadt")) {
+						JOptionPane.showMessageDialog(frame, "Bitte machen Sie zuerst Ihre Einstellungen.", "Fehlende Einstellungen", JOptionPane.WARNING_MESSAGE);
+						new SettingsFrame().main(null);
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -134,6 +132,7 @@ public class AllinFeeFrame extends JFrame implements Runnable, ListDataListener 
 		setTitle("Freelancer - AllIn-Honorar Calculator");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 438);
+		setLocationRelativeTo(null);
 		
 		JMenuBar menuBar = new JMenuBar();
 		menuBar.setFont(new Font("Dialog", Font.PLAIN, 12));
@@ -203,7 +202,8 @@ public class AllinFeeFrame extends JFrame implements Runnable, ListDataListener 
 		JMenuItem menuItemSettings = new JMenuItem("Einstellungen");
 		menuItemSettings.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				SettingsFrame.main(null);
+				SettingsFrame settings = new SettingsFrame();
+				settings.main(null);
 			}
 		});
 		menuItemSettings.setFont(new Font("Dialog", Font.PLAIN, 12));
@@ -241,14 +241,21 @@ public class AllinFeeFrame extends JFrame implements Runnable, ListDataListener 
 		targetCityLabel.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
 
 		targetCityComboBox = new JComboBox<String>();
+		targetCityComboBox.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				myComboBoxModel.reload();
+				targetCityComboBox.setModel(myComboBoxModel);
+			}
+		});
 		targetCityComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				XMLCreator xmlelement = new XMLCreator();
 				String city = (String) targetCityComboBox.getSelectedItem();
-				if (Double.parseDouble(xmlelement.readXML(city).get(1)) < 420.00 && Double.parseDouble(xmlelement.readXML(city).get(2)) <= 2.5) {
+				if (Double.parseDouble(xmlelement.readXML(city).get(1)) < Double.parseDouble(maxDistance) && Double.parseDouble(xmlelement.readXML(city).get(2)) <= Double.parseDouble(drivingTime)) {
 					daysProjectComboBox.setEnabled(true);
 					overnightStayComboBox.setEnabled(false);
-				} else if (Double.parseDouble(xmlelement.readXML(city).get(1)) < 420.00 && Double.parseDouble(xmlelement.readXML(city).get(2)) > 2.5) {
+				} else if (Double.parseDouble(xmlelement.readXML(city).get(1)) < Double.parseDouble(maxDistance) && Double.parseDouble(xmlelement.readXML(city).get(2)) > Double.parseDouble(drivingTime)) {
 					daysProjectComboBox.setEnabled(false);
 					overnightStayComboBox.setEnabled(true);
 				}else {
@@ -268,23 +275,17 @@ public class AllinFeeFrame extends JFrame implements Runnable, ListDataListener 
 				cur5Label.setVisible(false);
 			}
 		});
-		/*
-		 * Städte in Liste einlesen
-		 */
-		Vector<String> cities = new Vector<String>();
-		XMLCreator cityList = new XMLCreator();
-		for (int i = 0; i < cityList.CityList().size(); i++) {
-			cities.add(cityList.CityList().get(i));
-		}
+		
 		/*
 		 * ComboBoxModel erzeugen
 		 */
-		comboBoxModel = new DefaultComboBoxModel<String>(cities);
-		comboBoxModel.addListDataListener(this);
+		myComboBoxModel = new ComboBoxModel();
+	//	myComboBoxModel.addListDataListener(this);
 		/*
 		 * ComboBoxModel setzen
 		 */
-		targetCityComboBox.setModel(comboBoxModel);
+		myComboBoxModel.reload();
+		targetCityComboBox.setModel(myComboBoxModel);
 		
 		
 		
@@ -380,12 +381,12 @@ public class AllinFeeFrame extends JFrame implements Runnable, ListDataListener 
 					 * Alle anderen Strecken benötigen ein Normalticket und verursachen Hotelkosten.
 					 * Zusätzlich wird geprüft, ob das Honorar als Stundensatz (bis 399,00) oder als Tagessatz eingeben wurde
 					 */
-					if (travelDistance <= 420.0) {
+					if (travelDistance <= Double.parseDouble(maxDistance)) {
 						// Monatsticket kommt zum Einsatz
-						if (travelTime <= 2.5) {
+						if (travelTime <= Double.parseDouble(drivingTime)) {
 							// Verwendung des Monatstickets und täglichem Pendeln
 							// Überprüfung der Eingabe, ob als Stundensatz oder als Tagessatz erfolgt
-							if (fee < 400.0) {
+							if (fee < Double.parseDouble(minFee)) {
 								// Stundensatz
 								// Test, ab wann das Normalticket(4) günstiger ist, als das Monatsticket(3): Normalticket > Monatsticket/Projektage
 								if (roundTripTicket > monthlyTicket/projektdays) {
@@ -437,7 +438,7 @@ public class AllinFeeFrame extends JFrame implements Runnable, ListDataListener 
 						} else {
 							// Verwendung des Monatstickets mit Übernachtung und wöchentlichem Pendeln
 							// Überprüfung der Eingabe, ob als Stundensatz oder als Tagessatz erfolgt
-							if (fee < 400.0) {
+							if (fee < Double.parseDouble(minFee)) {
 								// Stundensatz
 								// Test, ab wann das Normalticket(4) günstiger ist, als das Monatsticket(3): Normalticket > Monatsticket/Projektage
 								if (roundTripTicket > monthlyTicket/projektdays) {
@@ -493,7 +494,7 @@ public class AllinFeeFrame extends JFrame implements Runnable, ListDataListener 
 						if (travelTime <= 5.0) {
 							// Normalticket(4) mit Übernachtung(5)
 							// Überprüfung der Eingabe, ob als Stundensatz oder als Tagessatz erfolgt
-							if (fee < 400.0) {
+							if (fee < Double.parseDouble(minFee)) {
 								// Stundensatz
 								dayHonorarLabel.setText(String.valueOf(f.format(price.calculateHonorar(fee*hoursPerDay, roundTripTicket, sconto, railBonus, hotelCosts, overnightStay))));
 								hourHonorarLabel.setText(String.valueOf(f.format(price.calculateHonorar(fee*hoursPerDay, roundTripTicket, sconto, railBonus, hotelCosts, overnightStay)/hoursPerDay)));
@@ -517,7 +518,7 @@ public class AllinFeeFrame extends JFrame implements Runnable, ListDataListener 
 						} else {
 							// Normalticket(4) mit Übernachtung(5) und Flugticket(6)
 							// Überprüfung der Eingabe, ob als Stundensatz oder als Tagessatz erfolgt
-							if (fee < 400.0) {
+							if (fee < Double.parseDouble(minFee)) {
 								// Stundensatz
 								dayHonorarLabel.setText(String.valueOf(f.format(price.calculateHonorar(fee*hoursPerDay, roundTripTicket, sconto, railBonus, hotelCosts, overnightStay))));
 								hourHonorarLabel.setText(String.valueOf(f.format(price.calculateHonorar(fee*hoursPerDay, roundTripTicket, sconto, railBonus, hotelCosts, overnightStay)/hoursPerDay)));
@@ -877,13 +878,5 @@ public class AllinFeeFrame extends JFrame implements Runnable, ListDataListener 
 	/*private void registerValidators() {
 		this.feeTextField.setInputVerifier(this.OnlyDigitsVerifier);
 	}*/
-	
-	private class SwingAction extends AbstractAction {
-		public SwingAction() {
-			putValue(NAME, "SwingAction");
-			putValue(SHORT_DESCRIPTION, "Some short description");
-		}
-		public void actionPerformed(ActionEvent e) {
-		}
-	}
+
 }
