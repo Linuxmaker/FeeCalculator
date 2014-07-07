@@ -17,13 +17,14 @@ import java.util.Properties;
 public class Settings {
 	String file = System.getProperties().getProperty("user.home")+File.separator+".settings.cfg";
 	String defaultFile = "resources"+File.separator+"settings.cfg";
-	public void generateSettings(String workingHours, String directory, String startCity, String maxDistance, String minFee){
+	public void generateSettings(String workingHours, String directory, String startCity, String maxDistance, String minFee, String drivingTime){
 		Properties settings = new Properties();
 		settings.setProperty("workinghours", workingHours);
 		settings.setProperty("directory", directory);
 		settings.setProperty("pointOfDeparture", startCity);
 		settings.setProperty("maxdistance", maxDistance);
 		settings.setProperty("minFee", minFee);
+		settings.setProperty("drivingTime", drivingTime);
 		
 		FileWriter writer;
 		try {
