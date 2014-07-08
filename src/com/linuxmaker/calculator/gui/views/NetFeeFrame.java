@@ -6,7 +6,8 @@ package com.linuxmaker.calculator.gui.views;
 import static com.linuxmaker.calculator.Constants.ORIGIN_CITY;
 import static com.linuxmaker.calculator.Constants.WORKINGDAY;
 
-import java.awt.BorderLayout;
+import com.linuxmaker.calculator.ComboBoxModel;
+
 import java.awt.Container;
 import java.awt.EventQueue;
 
@@ -28,6 +29,7 @@ import javax.swing.JOptionPane;
 
 import java.awt.Font;
 import java.text.DecimalFormat;
+import java.util.Collections;
 import java.util.Vector;
 
 import javax.swing.JTextField;
@@ -47,6 +49,8 @@ import java.io.File;
 
 import javax.swing.JRadioButton;
 import javax.swing.ButtonGroup;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 
 /**
  * @author Andreas Günther, IT-LINUXMAKER
@@ -56,8 +60,8 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 
 	private JPanel contentPane;
 	private JTextField originCityTextField;
-	private JComboBox targetCityComboBox;
-	private DefaultComboBoxModel comboBoxModel;
+	private JComboBox<String> targetCityComboBox;
+	private ComboBoxModel myComboBoxModel;
 	private JLabel allInFeeLabel;
 	private JTextField allInFeeTextField;
 	private JLabel cur1Label;
@@ -116,6 +120,7 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		contentPane.setBackground(new Color(250, 250, 210));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
+		setLocationRelativeTo(getParent());
 		
 		JLabel originCityLabel = new JLabel("Ausgangsstadt");
 		originCityLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
@@ -129,23 +134,25 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		targetCityLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		targetCityComboBox = new JComboBox<String>();
-		/*
-		 * Städte in Vector einlesen
-		 */
-		Vector<String> cities = new Vector<>();
-		XMLCreator cityList = new XMLCreator();
-		for (int i = 0; i < cityList.CityList().size(); i++) {
-			cities.add(cityList.CityList().get(i));
-		}
+		targetCityComboBox.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				myComboBoxModel.reload();
+				targetCityComboBox.setModel(myComboBoxModel);
+			}
+		});
+		
 		/*
 		 * ComboBoxModel erzeugen
 		 */
-		comboBoxModel = new DefaultComboBoxModel<String>(cities);
-		comboBoxModel.addListDataListener(this);
+		myComboBoxModel = new ComboBoxModel();
+
 		/*
 		 * ComboBoxModel setzen
 		 */
-		targetCityComboBox.setModel(comboBoxModel);
+		myComboBoxModel.reload();
+		targetCityComboBox.setModel(myComboBoxModel);
+		
 		
 		targetCityComboBox.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
