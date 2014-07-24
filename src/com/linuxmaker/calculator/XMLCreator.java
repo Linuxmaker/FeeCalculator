@@ -7,7 +7,6 @@ import static com.linuxmaker.calculator.Constants.ATTRIBUTE_NAME;
 import static com.linuxmaker.calculator.Constants.ELEMENT_CITY;
 import static com.linuxmaker.calculator.Constants.ELEMENT_DISTANCE;
 import static com.linuxmaker.calculator.Constants.ELEMENT_DURATION;
-import static com.linuxmaker.calculator.Constants.ELEMENT_FLIGHTCOST;
 import static com.linuxmaker.calculator.Constants.ELEMENT_HOTEL;
 import static com.linuxmaker.calculator.Constants.ELEMENT_TICKET;
 import static com.linuxmaker.calculator.Constants.ELEMENT_DTICKET;
@@ -55,7 +54,7 @@ public class XMLCreator {
 		super();
 	}
 	
-	public void writeXML(String cityName, String ticket, String dticket, String hotel, String flightcost) throws XPathExpressionException, SAXException, ParserConfigurationException, JDOMException {
+	public void writeXML(String cityName, String ticket, String dticket, String hotel) throws XPathExpressionException, SAXException, ParserConfigurationException, JDOMException {
 		Parser distance = new Parser();
 		Parser duration = new Parser();
 		try {
@@ -70,7 +69,6 @@ public class XMLCreator {
 			city.addContent(new Element(ELEMENT_TICKET).setText(ticket));
 			city.addContent(new Element(ELEMENT_DTICKET).setText(dticket));
 			city.addContent(new Element(ELEMENT_HOTEL).setText(hotel));
-			city.addContent(new Element(ELEMENT_FLIGHTCOST).setText(flightcost));
 			xmlRoot.addContent(city);
 
 			XMLOutputter xmlOutput = new XMLOutputter();
@@ -101,8 +99,7 @@ public class XMLCreator {
 					results.add(element.getChildText(ELEMENT_DURATION));
 					results.add(element.getChildText(ELEMENT_TICKET));
 					results.add(element.getChildText(ELEMENT_DTICKET));
-					results.add(element.getChildText(ELEMENT_HOTEL));
-					results.add(element.getChildText(ELEMENT_FLIGHTCOST));	
+					results.add(element.getChildText(ELEMENT_HOTEL));	
 				} 
 			}
 		} catch (JDOMException | IOException e) {
@@ -112,7 +109,7 @@ public class XMLCreator {
 	}
 
 	@SuppressWarnings({ "deprecation", "unchecked" })
-	public void changeXML(String cityName, String varMonthlyTicket, String varRoundTripTicket, String varHotel, String varFlightTicket) {
+	public void changeXML(String cityName, String varMonthlyTicket, String varRoundTripTicket, String varHotel) {
 		try {
 			SAXBuilder builder = new SAXBuilder();
 			Document doc = (Document) builder.build(xmlFile);
@@ -135,10 +132,6 @@ public class XMLCreator {
 					hotelCost.addContent(varHotel);
 					city.removeChild(ELEMENT_HOTEL);
 					city.addContent(hotelCost);
-					Element flightTicket = new Element(ELEMENT_FLIGHTCOST);
-					flightTicket.addContent(varFlightTicket);
-					city.removeChild(ELEMENT_FLIGHTCOST);
-					city.addContent(flightTicket);
 				}
 				
 			}
