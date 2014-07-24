@@ -43,8 +43,6 @@ import java.text.DecimalFormat;
 
 import javax.swing.JCheckBox;
 import javax.swing.JMenuBar;
-import javax.swing.JRadioButton;
-import javax.swing.ButtonGroup;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.JMenu;
@@ -52,6 +50,8 @@ import javax.swing.JMenuItem;
 
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 
 /**
  * @author Andreas Günther, IT-LINUXMAKER
@@ -66,6 +66,8 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 	private String originCity = new Settings().readSettings("pointOfDeparture");
 	private String path = new Settings().readSettings("directory");
 	private Double workingHours = Double.parseDouble(new Settings().readSettings("workinghours"));
+	private Double maxDistance = Double.parseDouble(new Settings().readSettings("maxdistance"));
+	private Double drivingTime = Double.parseDouble(new Settings().readSettings("drivingTime"));
 	private JPanel contentPane;
 	private JTextField originCityTextField;
 	private JTextField feeTextField;
@@ -82,6 +84,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 	private JComboBox<String> overnightStayComboBox;
 	private JTextField hoursPerDayTextField;
 	private final JComboBox<String> daysProjectComboBox;
+	private JCheckBox carCheckBox;
 	
 	/**
 	 * Launch the application.
@@ -229,28 +232,35 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		targetCityLabel.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
 
 		targetCityComboBox = new JComboBox<String>();
+		targetCityComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					XMLCreator xmlelement = new XMLCreator();
+					String city = (String) targetCityComboBox.getSelectedItem();
+					if (Double.parseDouble(xmlelement.readXML(city).get(1)) < maxDistance && Double.parseDouble(xmlelement.readXML(city).get(2)) <= drivingTime) {
+						daysProjectComboBox.setEnabled(true);
+						overnightStayComboBox.setEnabled(false);
+					} else if (Double.parseDouble(xmlelement.readXML(city).get(1)) < maxDistance && Double.parseDouble(xmlelement.readXML(city).get(2)) > drivingTime) {
+						daysProjectComboBox.setEnabled(false);
+						overnightStayComboBox.setEnabled(true);
+					} else {
+						daysProjectComboBox.setEnabled(false);
+						overnightStayComboBox.setEnabled(true);
+						overnightStayComboBox.setSelectedIndex(4);
+					}
+				}
+			}
+		});
 		targetCityComboBox.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
 				myComboBoxModel.reload();
-				targetCityComboBox.setModel(myComboBoxModel);
+				targetCityComboBox.setModel(myComboBoxModel);				
 			}
 		});
 		targetCityComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				/*XMLCreator xmlelement = new XMLCreator();
-				String city = (String) targetCityComboBox.getSelectedItem();
-				if (Double.parseDouble(xmlelement.readXML(city).get(1)) < Double.parseDouble(maxDistance) && Double.parseDouble(xmlelement.readXML(city).get(2)) <= Double.parseDouble(drivingTime)) {
-					daysProjectComboBox.setEnabled(true);
-					overnightStayComboBox.setEnabled(false);
-				} else if (Double.parseDouble(xmlelement.readXML(city).get(1)) < Double.parseDouble(maxDistance) && Double.parseDouble(xmlelement.readXML(city).get(2)) > Double.parseDouble(drivingTime)) {
-					daysProjectComboBox.setEnabled(false);
-					overnightStayComboBox.setEnabled(true);
-				}else {
-					daysProjectComboBox.setEnabled(false);
-					overnightStayComboBox.setEnabled(true);
-					overnightStayComboBox.setSelectedIndex(4);
-				}*/
+				
 				dayPriceLabel.setVisible(false);
 				hourPriceLabel.setVisible(false);
 				hourHonorarLabel.setVisible(false);
@@ -277,6 +287,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		targetCityComboBox.setMaximumRowCount(10);
 		targetCityComboBox.setFont(new Font("Dialog", Font.PLAIN, 12));
 		JLabel feeLabel = new JLabel("Netto-Honorar");
+		feeLabel.setToolTipText("Keine Eingabe ermittelt die Reisekosten");
 		feeLabel.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
 		
 		feeTextField = new JTextField();
@@ -286,6 +297,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		feeTextField.setColumns(10);
 		
 		JLabel daysProjectLabel = new JLabel("Projekttage Monat");
+		daysProjectLabel.setToolTipText("Anzahl der tatsächlichen Projekttage bei Zeitfahrkarten");
 		daysProjectLabel.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
 		
 		daysProjectComboBox = new JComboBox<String>();
@@ -339,7 +351,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 						sconto = Double.parseDouble((String) scontoComboBox.getSelectedItem())/100 + 1;
 					} else {
 						sconto = 1.0;
-					}					
+					}
 					dayHonorarLabel.setText(String.valueOf(f.format(price.feeCalculator(
 							city, 
 							travelDistance, 
@@ -347,7 +359,8 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 							hoursPerDay, 
 							sconto, 
 							projektdays, 
-							overnightStay))));
+							overnightStay,
+							carCheckBox.isSelected()))));
 					hourHonorarLabel.setText(String.valueOf(f.format(price.feeCalculator(
 							city, 
 							travelDistance, 
@@ -355,7 +368,16 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 							hoursPerDay, 
 							sconto, 
 							projektdays, 
-							overnightStay)/hoursPerDay)));
+							overnightStay,
+							carCheckBox.isSelected())/hoursPerDay)));
+					if (feeTextField.getText().equals("0.00")) {
+						dayPriceLabel.setText("Reisekosten");
+						hourPriceLabel.setText("Reisekosten/h");
+					} else {
+						dayPriceLabel.setText("Tageshonorar");
+						hourPriceLabel.setText("Stundenhonorar");
+					}
+						
 					dayPriceLabel.setVisible(true);
 					hourPriceLabel.setVisible(true);
 					dayHonorarLabel.setVisible(true);
@@ -438,6 +460,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		resetButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
 		JLabel hoursPerDayLabel = new JLabel("Stunden pro Tag");
+		hoursPerDayLabel.setToolTipText("Änderungsmöglichkeit bei Abweichungen bei der Regelarbeitszeit");
 		hoursPerDayLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		hoursPerDayTextField = new JTextField();
@@ -445,20 +468,28 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		hoursPerDayTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		hoursPerDayTextField.setColumns(10);
 		
+		carCheckBox = new JCheckBox("Autobenutzung");
+		carCheckBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					daysProjectComboBox.setEnabled(false);
+					overnightStayComboBox.setEnabled(true);
+					overnightStayComboBox.setSelectedIndex(1);
+				} else {
+					daysProjectComboBox.setEnabled(true);
+				}
+			}
+		});
+		carCheckBox.setFont(new Font("Dialog", Font.PLAIN, 12));
+		
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.TRAILING)
 				.addGroup(gl_contentPane.createSequentialGroup()
 					.addContainerGap()
-					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-						.addGroup(Alignment.TRAILING, gl_contentPane.createSequentialGroup()
+					.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
+						.addGroup(gl_contentPane.createSequentialGroup()
 							.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
-								.addGroup(gl_contentPane.createSequentialGroup()
-									.addComponent(scontoCheckBox)
-									.addPreferredGap(ComponentPlacement.RELATED)
-									.addComponent(scontoComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-									.addPreferredGap(ComponentPlacement.RELATED)
-									.addComponent(scontoLabel))
 								.addGroup(gl_contentPane.createSequentialGroup()
 									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 										.addGroup(gl_contentPane.createSequentialGroup()
@@ -468,7 +499,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 											.addPreferredGap(ComponentPlacement.RELATED)
 											.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
 												.addGroup(gl_contentPane.createSequentialGroup()
-													.addComponent(hourHonorarLabel, GroupLayout.DEFAULT_SIZE, 73, Short.MAX_VALUE)
+													.addComponent(hourHonorarLabel, GroupLayout.DEFAULT_SIZE, 67, Short.MAX_VALUE)
 													.addGap(18)
 													.addComponent(cur3Label))
 												.addGroup(gl_contentPane.createSequentialGroup()
@@ -482,44 +513,52 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 											.addComponent(resetButton)
 											.addGap(82)))
 									.addGap(44)
-									.addComponent(endButton)))
+									.addComponent(endButton))
+								.addGroup(gl_contentPane.createSequentialGroup()
+									.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
+										.addGroup(gl_contentPane.createSequentialGroup()
+											.addComponent(scontoCheckBox)
+											.addPreferredGap(ComponentPlacement.RELATED)
+											.addComponent(scontoComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+										.addGroup(gl_contentPane.createSequentialGroup()
+											.addComponent(daysProjectLabel)
+											.addGap(12)
+											.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
+												.addComponent(hoursPerDayTextField, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 51, Short.MAX_VALUE)
+												.addComponent(daysProjectComboBox, Alignment.LEADING, 0, 51, Short.MAX_VALUE))
+											.addGap(6)
+											.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+												.addGroup(gl_contentPane.createSequentialGroup()
+													.addComponent(overnightStayLabel)
+													.addPreferredGap(ComponentPlacement.RELATED)
+													.addComponent(overnightStayComboBox, GroupLayout.PREFERRED_SIZE, 51, GroupLayout.PREFERRED_SIZE))
+												.addComponent(hoursPerDayLabel))))
+									.addPreferredGap(ComponentPlacement.RELATED)
+									.addComponent(scontoLabel)))
 							.addGap(60))
 						.addGroup(gl_contentPane.createSequentialGroup()
 							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 								.addGroup(gl_contentPane.createSequentialGroup()
-									.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
-										.addComponent(feeLabel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 116, Short.MAX_VALUE)
-										.addComponent(daysProjectLabel, Alignment.LEADING))
+									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+										.addComponent(feeLabel, GroupLayout.DEFAULT_SIZE, 143, Short.MAX_VALUE)
+										.addGroup(gl_contentPane.createSequentialGroup()
+											.addComponent(targetCityLabel)
+											.addGap(34)))
 									.addPreferredGap(ComponentPlacement.RELATED))
 								.addGroup(gl_contentPane.createSequentialGroup()
-									.addComponent(targetCityLabel)
-									.addGap(34)))
-							.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING, false)
+									.addComponent(originCityLabel, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+									.addGap(3)))
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 								.addGroup(gl_contentPane.createSequentialGroup()
-									.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
-										.addComponent(originCityTextField, GroupLayout.PREFERRED_SIZE, 262, GroupLayout.PREFERRED_SIZE)
-										.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-											.addGroup(gl_contentPane.createSequentialGroup()
-												.addComponent(feeTextField, GroupLayout.PREFERRED_SIZE, 77, GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(cur1Label))
-											.addComponent(targetCityComboBox, GroupLayout.PREFERRED_SIZE, 263, GroupLayout.PREFERRED_SIZE)))
-									.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-								.addGroup(gl_contentPane.createSequentialGroup()
-									.addComponent(daysProjectComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-									.addGap(18)
-									.addComponent(overnightStayLabel)
+									.addComponent(feeTextField, GroupLayout.PREFERRED_SIZE, 77, GroupLayout.PREFERRED_SIZE)
 									.addPreferredGap(ComponentPlacement.RELATED)
-									.addComponent(overnightStayComboBox, GroupLayout.PREFERRED_SIZE, 51, GroupLayout.PREFERRED_SIZE)
-									.addGap(126))))
+									.addComponent(cur1Label))
+								.addComponent(targetCityComboBox, GroupLayout.PREFERRED_SIZE, 263, GroupLayout.PREFERRED_SIZE)
+								.addComponent(originCityTextField, GroupLayout.PREFERRED_SIZE, 262, GroupLayout.PREFERRED_SIZE))
+							.addContainerGap(30, Short.MAX_VALUE))
 						.addGroup(gl_contentPane.createSequentialGroup()
-							.addComponent(originCityLabel, GroupLayout.DEFAULT_SIZE, 160, Short.MAX_VALUE)
-							.addGap(319))
-						.addGroup(gl_contentPane.createSequentialGroup()
-							.addComponent(hoursPerDayLabel)
-							.addGap(18)
-							.addComponent(hoursPerDayTextField, GroupLayout.DEFAULT_SIZE, 49, Short.MAX_VALUE)
-							.addGap(307))))
+							.addComponent(carCheckBox)
+							.addContainerGap(325, Short.MAX_VALUE))))
 		);
 		gl_contentPane.setVerticalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -528,8 +567,8 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(originCityLabel)
 						.addComponent(originCityTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
+					.addGap(12)
+					.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
 						.addComponent(targetCityLabel)
 						.addComponent(targetCityComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
 					.addGap(18)
@@ -541,17 +580,19 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 							.addComponent(feeTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 							.addComponent(cur1Label))
 						.addComponent(scontoCheckBox))
-					.addGap(18)
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addComponent(carCheckBox)
+					.addGap(12)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(daysProjectLabel)
 						.addComponent(daysProjectComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 						.addComponent(overnightStayLabel)
 						.addComponent(overnightStayComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addGap(10)
+					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-						.addComponent(hoursPerDayLabel)
-						.addComponent(hoursPerDayTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addGap(42)
+						.addComponent(hoursPerDayTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(hoursPerDayLabel))
+					.addGap(18)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(dayPriceLabel)
 						.addComponent(cur2Label)
@@ -566,7 +607,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 						.addComponent(calculateButton)
 						.addComponent(resetButton)
 						.addComponent(endButton))
-					.addContainerGap(49, Short.MAX_VALUE))
+					.addContainerGap(9, Short.MAX_VALUE))
 		);
 		contentPane.setLayout(gl_contentPane);
 	}
@@ -591,9 +632,4 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		// TODO Auto-generated method stub
 		
 	}
-	
-	/*private void registerValidators() {
-		this.feeTextField.setInputVerifier(this.OnlyDigitsVerifier);
-	}*/
-
 }
