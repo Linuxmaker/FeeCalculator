@@ -10,43 +10,95 @@ package com.linuxmaker.calculator;
  *
  */
 public class Fee {
-	private String drivingTime = new Settings().readSettings("drivingTime");
+	private Double drivingTime = Double.parseDouble(new Settings().readSettings("drivingTime"));
 	private Double maxDistance = Double.parseDouble(new Settings().readSettings("maxdistance"));
 	private Double minFee = Double.parseDouble(new Settings().readSettings("minFee"));
 	private Double workingHours = Double.parseDouble(new Settings().readSettings("workinghours"));
 	private Double railBonus = Double.parseDouble(new Settings().readSettings("railCard"));
+	private Double consumption = Double.parseDouble(new Settings().readSettings("consumption"));
+	private Double fuelConsumption = Double.parseDouble(new Settings().readSettings("fuelConsumption"));
+	private Double fuelprice = Double.parseDouble(new Settings().readSettings("fuelprice"));
 	
 	/*
-	 * Main methode, used by the graphical user interface
+	 * Main method, used by the graphical user interface
 	 */
-	public Double feeCalculator (String city, Double travelDistance, Double fee, Double hoursPerDay, Double sconto, int projektdays, int overnightStay) {
-		XMLCreator xmlelement = new XMLCreator();
-		Double monthlyTicket = Double.parseDouble(xmlelement.readXML(city).get(3));
-		Double roundTripTicket = Double.parseDouble(xmlelement.readXML(city).get(4));
-		Double hotelCosts = Double.parseDouble(xmlelement.readXML(city).get(5));
+	public Double feeCalculator (String city, 
+								 Double travelDistance, 
+								 Double fee, 
+								 Double hoursPerDay, 
+								 Double sconto, 
+								 int projektdays, 
+								 int overnightStay, 
+								 Boolean drive) 
+	{
+		Double distance = Double.parseDouble(new XMLCreator().readXML(city).get(1));
+		Double monthlyTicket = Double.parseDouble(new XMLCreator().readXML(city).get(3));
+		Double roundTripTicket = Double.parseDouble(new XMLCreator().readXML(city).get(4));
+		Double hotelCosts = Double.parseDouble(new XMLCreator().readXML(city).get(5));		
 		Double account = null;
 		
-		if (travelDistance <= maxDistance) { // Monatsticket
-			if (fee < minFee) { // Stundensatz
-				if (roundTripTicket > monthlyTicket/projektdays) { // Verwendung des Monatstickets(3)
-					account = calculateHonorar(fee*hoursPerDay, monthlyTicket, sconto, projektdays);
-				} else { // Verwendung des Normaltickets(4)
-					account = calculateHonorar(fee*hoursPerDay, roundTripTicket, sconto, railBonus);
+		if (drive) {
+			if (overnightStay == 0) { // Tägliches Pendeln
+				if (fee < minFee) { // Stundensatz
+						account = (fee*hoursPerDay + (consumption/100 + fuelConsumption/100 * fuelprice) * distance * 2) * sconto;
+				} else { // Tagessatz
+						account = (fee*factorWorkingHours(workingHours, hoursPerDay) + (consumption/100 + fuelConsumption/100 * fuelprice) * distance * 2) * sconto;
 				}
-			} else { // Tagessatz
-				if (roundTripTicket > monthlyTicket/projektdays) { // Verwendung des Monatstickets(3)
-					account = calculateHonorar(fee*factorWorkingHours(workingHours, hoursPerDay), monthlyTicket, sconto, projektdays);
-				} else { // Verwendung des Normaltickets(4)
-					account = calculateHonorar(fee*factorWorkingHours(workingHours, hoursPerDay), roundTripTicket, sconto, railBonus);
+				System.out.println("Autobenutzung ohne Übernachtung");
+			} else { // Wöchentliches Pendeln
+				if (fee < minFee) { // Stundensatz
+					account = (fee*hoursPerDay + (consumption/100 + fuelConsumption/100 * fuelprice) * distance * 2 + overnightStay * hotelCosts) * sconto;
+				} else { // Tagessatz
+					account = (fee*factorWorkingHours(workingHours, hoursPerDay) + (consumption/100 + fuelConsumption/100 * fuelprice) * distance * 2 + overnightStay * hotelCosts) * sconto;
 				}
+				System.out.println("Autobenutzung mit Übernachtung");
 			}
-		} else { // Normalticket kommt zum Einsatz
-			if (fee < minFee) { // Stundensatz
-				account = calculateHonorar(fee*hoursPerDay, roundTripTicket, sconto, railBonus, hotelCosts, overnightStay);
-			} else { // Tagessatz
-				account = calculateHonorar(fee*factorWorkingHours(workingHours, hoursPerDay), roundTripTicket, sconto, railBonus, hotelCosts, overnightStay);
+		} else {
+			if (travelDistance <= maxDistance) { // Monatsticket
+				if (overnightStay == 0) { // Tägliches Pendeln
+					if (fee < minFee) { // Stundensatz
+						if (roundTripTicket > monthlyTicket/projektdays) { // Verwendung des Monatstickets(3)
+							account = calculateFee(fee*hoursPerDay, monthlyTicket, sconto, projektdays);
+							System.out.println("Monatsticket ohne Übernachtung");
+						} else { // Verwendung des Normaltickets(4)
+							account = calculateFee(fee*hoursPerDay, roundTripTicket, sconto, railBonus);
+							System.out.println("Normalticket ohne Übernachtung");
+						}
+					} else { // Tagessatz
+						if (roundTripTicket > monthlyTicket/projektdays) { // Verwendung des Monatstickets(3)
+							account = calculateFee(fee*factorWorkingHours(workingHours, hoursPerDay), monthlyTicket, sconto, projektdays);
+						} else { // Verwendung des Normaltickets(4)
+							account = calculateFee(fee*factorWorkingHours(workingHours, hoursPerDay), roundTripTicket, sconto, railBonus);
+						}
+					}
+				} else { // Wöchentliches Pendeln
+					if (fee < minFee) { // Stundensatz
+						if (roundTripTicket > monthlyTicket/projektdays) { // Verwendung des Monatstickets(3)
+							account = calculateFee(fee*hoursPerDay, monthlyTicket, sconto, hotelCosts, projektdays);
+							System.out.println("Monatsticket mit Übernachtung");
+						} else { // Verwendung des Normaltickets(4)
+							account = calculateFee(fee*hoursPerDay, roundTripTicket, sconto, railBonus, hotelCosts, overnightStay);
+							System.out.println("Normalticket mit Übernachtung");
+						}
+					} else { // Tagessatz
+						if (roundTripTicket > monthlyTicket/projektdays) { // Verwendung des Monatstickets(3)
+							account = calculateFee(fee*factorWorkingHours(workingHours, hoursPerDay), monthlyTicket, sconto, hotelCosts, projektdays);
+						} else { // Verwendung des Normaltickets(4)
+							account = calculateFee(fee*factorWorkingHours(workingHours, hoursPerDay), roundTripTicket, sconto, railBonus, hotelCosts, overnightStay);
+						}
+					}
+				}
+				
+				
+			} else { // Normalticket kommt zum Einsatz
+				if (fee < minFee) { // Stundensatz
+					account = calculateFee(fee*hoursPerDay, roundTripTicket, sconto, railBonus, hotelCosts, overnightStay);
+				} else { // Tagessatz
+					account = calculateFee(fee*factorWorkingHours(workingHours, hoursPerDay), roundTripTicket, sconto, railBonus, hotelCosts, overnightStay);
+				}
+				System.out.println("Normalticket mit Übernachtung, lange Strecke");
 			}
-		}
+		}		
 		return account;
 	}
 	
@@ -60,7 +112,7 @@ public class Fee {
 	/*
 	 * Methode für den Fall Monatsticket und tägliches Pendeln
 	 */
-	public Double calculateHonorar(Double fee, Double monthlyTicket, Double sconto, int projektdays) {
+	public Double calculateFee(Double fee, Double monthlyTicket, Double sconto, int projektdays) {
 		return (fee + monthlyTicket/projektdays)*sconto;				
 	}
 	
@@ -71,7 +123,7 @@ public class Fee {
 	/*
 	 * Methode für den Fall Normalticket und tägliches Pendeln
 	 */
-	public Double calculateHonorar(Double fee, Double roundTripTicket, Double sconto, Double railBonus) {
+	public Double calculateFee(Double fee, Double roundTripTicket, Double sconto, Double railBonus) {
 		return (fee + roundTripTicket*railBonus)*sconto;				
 	}
 	
@@ -82,11 +134,11 @@ public class Fee {
 	/*
 	 * Methode für den Fall Monatsticket, wöchentliches Pendeln und Übernachtung
 	 */
-	public Double calculateHonorar(Double fee, Double monthlyTicket, Double sconto, Double hotel, int projektdays) {
+	public Double calculateFee(Double fee, Double monthlyTicket, Double sconto, Double hotel, int projektdays) {
 		return (fee + monthlyTicket/projektdays + hotel)*sconto;		
 	}
 	
-	public Double reCalculateHonorar(Double fee, Double monthlyTicket, Double hotel, int projektdays, Double sconto) {
+	public Double reCalculateFee(Double fee, Double monthlyTicket, Double hotel, int projektdays, Double sconto) {
 		return (fee/sconto) - (monthlyTicket/projektdays + hotel);				
 	}
 	
@@ -94,11 +146,11 @@ public class Fee {
 	/*
 	 * Methode für die Fälle Normalticket, wöchentliches Pendeln und Übernachtung
 	 */
-	public Double calculateHonorar(Double fee, Double ticket, Double sconto, Double railBonus, Double hotel, int  overnightStay) {
+	public Double calculateFee(Double fee, Double ticket, Double sconto, Double railBonus, Double hotel, int  overnightStay) {
 		return (fee*(overnightStay + 1) + ticket*railBonus + hotel*overnightStay)/(overnightStay + 1)*sconto;				
 	}
 	
-	public Double reCalculateHonorar(Double fee, Double ticket, Double hotel, Double railBonus, int  overnightStay, Double sconto) {
+	public Double reCalculateFee(Double fee, Double ticket, Double hotel, Double railBonus, int  overnightStay, Double sconto) {
 		return ((fee/sconto)*(overnightStay + 1) - (ticket*railBonus + hotel*overnightStay))/(overnightStay + 1);			
 	}
 }
