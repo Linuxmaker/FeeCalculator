@@ -53,14 +53,13 @@ public class AddFrame extends JFrame {
 	private JTextField railTicketMonthTextField;
 	private JLabel hotelCostsLabel;
 	private JTextField hotelCostsTextField;
-	private JLabel flightTicketLabel;
-	private JTextField flightTicketTextField;
 	private JLabel eur1Label;
 	private JLabel eur2Label;
 	private JLabel eur3Label;
-	private JLabel eur4Label;
 	private JLabel resultLabel;
 	private String originCity = new Settings().readSettings("pointOfDeparture");
+	private String drivingTime = new Settings().readSettings("drivingTime");
+	private String maxDistance = new Settings().readSettings("maxdistance");
 	/**
 	 * Launch the application.
 	 */
@@ -110,20 +109,17 @@ public class AddFrame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				Parser search = new Parser();
 				try {
-					if (search.parsedistance(originCity, cityTextField.getText()) <= 420.00) {
+					if (search.parsedistance(originCity, cityTextField.getText()) <= Double.parseDouble(maxDistance)) {
 						railTicketMonthTextField.setEnabled(true);
 						railTicketTwoTextField.setEnabled(true);
 					} else {
 						railTicketMonthTextField.setEnabled(false);
 						railTicketTwoTextField.setEnabled(true);	
 					}
-					if (search.parseduration(originCity, cityTextField.getText()) <= 2.5) {
+					if (search.parseduration(originCity, cityTextField.getText()) <= Double.parseDouble(drivingTime)) {
 						hotelCostsTextField.setEnabled(false);
 					} else {
 						hotelCostsTextField.setEnabled(true);
-						if (search.parseduration(originCity, cityTextField.getText()) > 5) {
-							flightTicketTextField.setEnabled(true);
-						}
 					}
 				} catch (XPathExpressionException | SAXException | IOException | ParserConfigurationException e1) {
 					// TODO Auto-generated catch block
@@ -160,23 +156,12 @@ public class AddFrame extends JFrame {
 		hotelCostsTextField.setText("0.00");
 		hotelCostsTextField.setColumns(10);
 		
-		flightTicketLabel = new JLabel("Flugticket");
-		flightTicketLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
-		
-		flightTicketTextField = new JTextField();
-		flightTicketTextField.setFont(new Font("Dialog", Font.PLAIN, 11));
-		flightTicketTextField.setEnabled(false);
-		flightTicketTextField.setText("0.00");
-		flightTicketTextField.setColumns(10);
-		
 		eur1Label = new JLabel("EUR");		
 		eur1Label.setFont(new Font("Dialog", Font.PLAIN, 11));
 		eur2Label = new JLabel("EUR");		
 		eur2Label.setFont(new Font("Dialog", Font.PLAIN, 11));
 		eur3Label = new JLabel("EUR");		
 		eur3Label.setFont(new Font("Dialog", Font.PLAIN, 11));
-		eur4Label = new JLabel("EUR");
-		eur4Label.setFont(new Font("Dialog", Font.PLAIN, 11));
 		
 		JButton addButton = new JButton("Hinzufügen");
 		addButton.addActionListener(new ActionListener() {
@@ -185,7 +170,7 @@ public class AddFrame extends JFrame {
 				//if (cityTextField.getText().equals(true)) {
 					Parser search = new Parser();
 					try {
-						writer.writeXML(cityTextField.getText(), railTicketMonthTextField.getText(), railTicketTwoTextField.getText(), hotelCostsTextField.getText(), flightTicketTextField.getText());
+						writer.writeXML(cityTextField.getText(), railTicketMonthTextField.getText(), railTicketTwoTextField.getText(), hotelCostsTextField.getText());
 						resultLabel.setVisible(true);
 					} catch (XPathExpressionException | SAXException
 							| ParserConfigurationException | JDOMException e) {
@@ -236,20 +221,17 @@ public class AddFrame extends JFrame {
 								.addComponent(railTicketTwoLabel)
 								.addComponent(railTicketMonthLabel)
 								.addComponent(hotelCostsLabel)
-								.addComponent(flightTicketLabel)
 								.addComponent(cityLabel)
 								.addComponent(resultLabel))
 							.addPreferredGap(ComponentPlacement.RELATED)
 							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 								.addGroup(gl_contentPane.createSequentialGroup()
 									.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING, false)
-										.addComponent(flightTicketTextField, Alignment.LEADING, 0, 0, Short.MAX_VALUE)
 										.addComponent(hotelCostsTextField, Alignment.LEADING, 0, 0, Short.MAX_VALUE)
 										.addComponent(railTicketMonthTextField, Alignment.LEADING, 0, 0, Short.MAX_VALUE)
 										.addComponent(railTicketTwoTextField, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 98, Short.MAX_VALUE))
 									.addPreferredGap(ComponentPlacement.RELATED)
 									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-										.addComponent(eur4Label)
 										.addComponent(eur3Label)
 										.addComponent(eur2Label)
 										.addComponent(eur1Label)))
@@ -291,16 +273,7 @@ public class AddFrame extends JFrame {
 						.addComponent(hotelCostsTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 						.addComponent(eur3Label)
 						.addComponent(hotelCostsLabel))
-					.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
-						.addGroup(Alignment.LEADING, gl_contentPane.createSequentialGroup()
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-								.addComponent(flightTicketTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-								.addComponent(eur4Label)))
-						.addGroup(gl_contentPane.createSequentialGroup()
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(flightTicketLabel)
-							.addGap(18)))
+					.addGap(31)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(addButton)
 						.addComponent(clearButton)
@@ -318,7 +291,5 @@ public class AddFrame extends JFrame {
 		railTicketMonthTextField.setText("0.00");
 		hotelCostsTextField.setEnabled(false);
 		hotelCostsTextField.setText("0.00");
-		flightTicketTextField.setEnabled(false);
-		flightTicketTextField.setText("0.00");
 	}
 }
