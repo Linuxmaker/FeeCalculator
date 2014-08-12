@@ -51,6 +51,8 @@ import javax.swing.JRadioButton;
 import javax.swing.ButtonGroup;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 
 /**
  * @author Andreas Günther, IT-LINUXMAKER
@@ -58,6 +60,11 @@ import java.awt.event.FocusEvent;
  */
 public class NetFeeFrame extends JFrame implements ListDataListener {
 
+	private String originCity = new Settings().readSettings("pointOfDeparture");
+	private String path = new Settings().readSettings("directory");
+	private Double workingHours = Double.parseDouble(new Settings().readSettings("workinghours"));
+	private Double maxDistance = Double.parseDouble(new Settings().readSettings("maxdistance"));
+	private Double drivingTime = Double.parseDouble(new Settings().readSettings("drivingTime"));
 	private JPanel contentPane;
 	private JTextField originCityTextField;
 	private JComboBox<String> targetCityComboBox;
@@ -67,25 +74,20 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 	private JLabel cur1Label;
 	private JLabel cur2Label;
 	private JLabel cur3Label;
-	private JLabel cur4Label;
-	private JLabel cur5Label;
 	private JLabel scontoLabel;
-	private JLabel hourFlightHonorarLabel;
-	private JLabel dayFlightHonorarLabel;
 	private JLabel daysProjectLabel;
 	private JComboBox daysProjectComboBox;
 	private JLabel overnightStayLabel;
 	private JComboBox overnightStayComboBox;
 	private JLabel dayPriceLabel;
 	private JLabel hourPriceLabel;
-	private JLabel dayNetLabel;
-	private JLabel hourNetLabel;
+	private JLabel dayAmountLabel;
+	private JLabel hourAmountLabel;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	private Double sconto;
 	private Double railBonus;
-	private JRadioButton railBonus25RadioButton;
-	private JRadioButton railBonus50RadioButton;
-	private JRadioButton railBonus100RadioButton;
+	private JTextField hoursPerDayTextField;
+	private JCheckBox carCheckBox;
 	/**
 	 * Launch the application.
 	 */
@@ -115,7 +117,7 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		setResizable(false);
 		setIconImage(Toolkit.getDefaultToolkit().getImage(NetFeeFrame.class.getResource("/com/linuxmaker/calculator/gui/resources/images16x16/currency_euro_yellow.png")));
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setBounds(100, 100, 450, 324);
+		setBounds(100, 100, 450, 345);
 		contentPane = new JPanel();
 		contentPane.setBackground(new Color(250, 250, 210));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -134,11 +136,42 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		targetCityLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		targetCityComboBox = new JComboBox<String>();
+		targetCityComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					XMLCreator xmlelement = new XMLCreator();
+					String city = (String) targetCityComboBox.getSelectedItem();
+					if (Double.parseDouble(xmlelement.readXML(city).get(1)) < maxDistance && Double.parseDouble(xmlelement.readXML(city).get(2)) <= drivingTime) {
+						daysProjectComboBox.setEnabled(true);
+						overnightStayComboBox.setEnabled(false);
+					} else if (Double.parseDouble(xmlelement.readXML(city).get(1)) < maxDistance && Double.parseDouble(xmlelement.readXML(city).get(2)) > drivingTime) {
+						daysProjectComboBox.setEnabled(false);
+						overnightStayComboBox.setEnabled(true);
+					} else {
+						daysProjectComboBox.setEnabled(false);
+						overnightStayComboBox.setEnabled(true);
+						overnightStayComboBox.setSelectedIndex(4);
+					}
+				}
+			}
+		});
+		
 		targetCityComboBox.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
 				myComboBoxModel.reload();
-				targetCityComboBox.setModel(myComboBoxModel);
+				targetCityComboBox.setModel(myComboBoxModel);				
+			}
+		});
+		
+		targetCityComboBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				dayPriceLabel.setVisible(false);
+				hourPriceLabel.setVisible(false);
+				dayAmountLabel.setVisible(false);
+				hourAmountLabel.setVisible(false);
+				cur2Label.setVisible(false);
+				cur3Label.setVisible(false);
 			}
 		});
 		
@@ -192,41 +225,38 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		
 		overnightStayComboBox = new JComboBox();
 		overnightStayComboBox.setModel(new DefaultComboBoxModel(new String[] {"0", "1", "2", "3", "4", "5"}));
-		overnightStayComboBox.setSelectedIndex(4);
+		overnightStayComboBox.setSelectedIndex(0);
 		overnightStayComboBox.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		dayPriceLabel = new JLabel("Netto-Tagessatz");
 		dayPriceLabel.setFont(new Font("Dialog", Font.BOLD, 12));
+		dayPriceLabel.setVisible(false);
 		
 		hourPriceLabel = new JLabel("Netto-Stundensatz");
 		hourPriceLabel.setFont(new Font("Dialog", Font.BOLD, 12));
+		dayPriceLabel.setVisible(false);
 		
-		dayNetLabel = new JLabel("Day");
-		dayNetLabel.setVisible(false);
-		dayNetLabel.setFont(new Font("Dialog", Font.BOLD, 12));
+		dayAmountLabel = new JLabel("dAmount");
+		dayAmountLabel.setVisible(false);
+		dayAmountLabel.setFont(new Font("Dialog", Font.BOLD, 12));
 		
 		cur2Label = new JLabel("EUR");
 		cur2Label.setFont(new Font("Dialog", Font.BOLD, 12));
+		cur2Label.setVisible(false);
 		
 		JButton calculateButton = new JButton("Netto-Honorar");
 		calculateButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				XMLCreator xmlelement = new XMLCreator();
 				Fee price = new Fee();
-				String folder = new Settings().readSettings("directory");
 				DecimalFormat f = new DecimalFormat("#0.00");
 				String city = (String) targetCityComboBox.getSelectedItem();
-				String fileName = System.getProperties().getProperty("user.home") + File.separator + folder + File.separator + originCityTextField.getText() + "City.xml";
+				String fileName = System.getProperties().getProperty("user.home")+ File.separator + path + File.separator + originCityTextField.getText() + "City.xml";
 				File xmlFile = new File(fileName);
 				Double fee = Double.parseDouble(allInFeeTextField.getText());
 				Double travelDistance = Double.parseDouble(xmlelement.readXML(city).get(1));
-				Double travelTime = Double.parseDouble(xmlelement.readXML(city).get(2));
-				Double monthlyTicket = Double.parseDouble(xmlelement.readXML(city).get(3));
-				Double roundTripTicket = Double.parseDouble(xmlelement.readXML(city).get(4));
-				Double hotelCosts = Double.parseDouble(xmlelement.readXML(city).get(5));
-				Double flightTicket = Double.parseDouble(xmlelement.readXML(city).get(6));
 				int overnightStay = Integer.valueOf((String) overnightStayComboBox.getSelectedItem());
-				Double hoursPerDay = WORKINGDAY;
+				Double hoursPerDay = Double.parseDouble(hoursPerDayTextField.getText());
 				int projektdays = Integer.valueOf((String) daysProjectComboBox.getSelectedItem());
 				Double sconto = Double.parseDouble((String) scontoComboBox.getSelectedItem());
 				/*
@@ -241,158 +271,32 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 					} else {
 						sconto = 1.0;
 					}
-					
-					/*
-					 * Überprüfung, ob die Bahncard-Option ausgewählt ist.
-					 */
-					if (railBonus25RadioButton.isSelected()) {
-						railBonus = 0.75;
-					} else if (railBonus50RadioButton.isSelected()) {
-						railBonus = 0.5;
-					} else if (railBonus100RadioButton.isSelected()) {
-						railBonus = 0.0;
-					} else {
-						railBonus = 1.0;
-					}
-					
-					/*
-					 * Preisbildung unter der Prämisse, dass ein Monatsticket (< 420 km) und mit Pendeln (<= 2.5 h) oder mit Hotelbuchung möglich ist.
-					 * Alle anderen Strecken benötigen ein Normalticket und verursachen Hotelkosten.
-					 * Zusätzlich wird geprüft, ob das Honorar als Stundensatz (bis 399,00) oder als Tagessatz eingeben wurde
-					 */
-					if (travelDistance <= 420.0) { // Monatsticket
-						if (travelTime <= 2.5) {
-							// Verwendung des Monatstickets und täglichem Pendeln
-							if (fee < 400.0) { // Überprüfung der Eingabe, ob als Stundensatz oder als Tagessatz
-								// Stundensatz
-								// Test, ab wann das Normalticket(4) günstiger ist als das Monatsticket(3)
-								if (roundTripTicket > monthlyTicket/projektdays) {
-									dayNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee*hoursPerDay, monthlyTicket, projektdays, sconto))));
-									hourNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee*hoursPerDay, monthlyTicket, projektdays, sconto)/hoursPerDay)));
-									dayNetLabel.setVisible(true);
-									hourPriceLabel.setVisible(true);
-									cur2Label.setVisible(true);
-									cur3Label.setVisible(true);
-								} else {
-									dayNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee*hoursPerDay, roundTripTicket, railBonus, sconto))));
-									hourNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee*hoursPerDay, roundTripTicket, railBonus, sconto)/hoursPerDay)));
-									dayNetLabel.setVisible(true);
-									hourPriceLabel.setVisible(true);
-									cur2Label.setVisible(true);
-									cur3Label.setVisible(true);
-								}
-							} else {
-								// Tagessatz
-								// Test, ab wann das Normalticket(4) günstiger ist als das Monatsticket(3)
-								if (roundTripTicket > monthlyTicket/projektdays) {
-									dayNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee, monthlyTicket, projektdays, sconto))));
-									hourNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee, monthlyTicket, projektdays, sconto)/hoursPerDay)));
-									dayNetLabel.setVisible(true);
-									hourPriceLabel.setVisible(true);
-									cur2Label.setVisible(true);
-									cur3Label.setVisible(true);
-								} else {
-									dayNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee, roundTripTicket, railBonus, sconto))));
-									hourNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee, roundTripTicket, railBonus, sconto)/hoursPerDay)));
-									dayNetLabel.setVisible(true);
-									hourPriceLabel.setVisible(true);
-									cur2Label.setVisible(true);
-									cur3Label.setVisible(true);
-								}
-							}							
-						} else {
-							// Verwendung des Monatstickets mit Übernachtung und wöchentlichem Pendeln
-							if (fee < 400.0) { // Überprüfung der Eingabe, ob als Stundensatz oder als Tagessatz
-								// Stundensatz
-								// Test, ab wann das Normalticket(4) günstiger ist als das Monatsticket(3)
-								if (roundTripTicket > monthlyTicket/projektdays) {
-									dayNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee*hoursPerDay, monthlyTicket, hotelCosts, projektdays, sconto))));
-									hourNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee*hoursPerDay, monthlyTicket, hotelCosts, projektdays, sconto)/hoursPerDay)));
-									dayNetLabel.setVisible(true);
-									hourPriceLabel.setVisible(true);
-									cur2Label.setVisible(true);
-									cur3Label.setVisible(true);
-								} else {
-									dayNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee*hoursPerDay, roundTripTicket, hotelCosts, railBonus, overnightStay, sconto))));
-									hourNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee*hoursPerDay, roundTripTicket, hotelCosts, railBonus, overnightStay, sconto)/hoursPerDay)));
-									dayNetLabel.setVisible(true);
-									hourPriceLabel.setVisible(true);
-									cur2Label.setVisible(true);
-									cur3Label.setVisible(true);
-								}
-							} else {
-								// Tagessatz
-								// Test, ab wann das Normalticket(4) günstiger ist als das Monatsticket(3)
-								if (roundTripTicket > monthlyTicket/projektdays) {
-									dayNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee, monthlyTicket, hotelCosts, projektdays, sconto))));
-									hourNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee, monthlyTicket, hotelCosts, projektdays, sconto)/hoursPerDay)));
-									dayNetLabel.setVisible(true);
-									hourPriceLabel.setVisible(true);
-									cur2Label.setVisible(true);
-									cur3Label.setVisible(true);
-								} else {
-									dayNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee, roundTripTicket, hotelCosts, railBonus, overnightStay, sconto))));
-									hourNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee, roundTripTicket, hotelCosts, railBonus, overnightStay, sconto)/hoursPerDay)));
-									dayNetLabel.setVisible(true);
-									hourPriceLabel.setVisible(true);
-									cur2Label.setVisible(true);
-									cur3Label.setVisible(true);
-								}
-							}
-						}
-					} else { // Hier wird zwischen Normalticket und Flugticket unterschieden, da keine Bahnzeitkarte mehr möglich ist
-						if (travelTime <= 5.0) {
-							// Normalticket mit Übernachtung, da die Strecke unter dem Zeitlimit liegt
-							if (fee < 400.0) { // Überprüfung der Eingabe, ob als Stundensatz oder als Tagessatz
-								// Stundensatz
-								dayNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee*hoursPerDay, roundTripTicket, hotelCosts, railBonus, overnightStay, sconto))));
-								hourNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee*hoursPerDay, roundTripTicket, hotelCosts, railBonus, overnightStay, sconto)/hoursPerDay)));
-								dayNetLabel.setVisible(true);
-								hourPriceLabel.setVisible(true);
-								cur2Label.setVisible(true);
-								cur3Label.setVisible(true);
-							} else {
-								// Tagessatz
-								dayNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee, roundTripTicket, hotelCosts, railBonus, overnightStay, sconto))));
-								hourNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee, roundTripTicket, hotelCosts, railBonus, overnightStay, sconto)/hoursPerDay)));
-								dayNetLabel.setVisible(true);
-								hourPriceLabel.setVisible(true);
-								cur2Label.setVisible(true);
-								cur3Label.setVisible(true);
-							}
-						} else {
-							// Hier wird alternativ ein Honorar mit Flugticket und Übernachtung ermittelt, da die Strecke sehr lang ist
-							if (fee < 400.0) { // Überprüfung der Eingabe, ob als Stundensatz oder als Tagessatz
-								// Stundensatz
-								dayNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee*hoursPerDay, roundTripTicket, hotelCosts, railBonus, overnightStay, sconto))));
-								hourNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee*hoursPerDay, roundTripTicket, hotelCosts, railBonus, overnightStay, sconto)/hoursPerDay)));
-								dayFlightHonorarLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee*hoursPerDay, roundTripTicket, hotelCosts, 1.0, overnightStay, sconto))));
-								hourFlightHonorarLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee*hoursPerDay, roundTripTicket, hotelCosts, 1.0, overnightStay, sconto)/hoursPerDay)));
-								dayNetLabel.setVisible(true);
-								hourPriceLabel.setVisible(true);
-								cur2Label.setVisible(true);
-								cur3Label.setVisible(true);
-								dayFlightHonorarLabel.setVisible(true);
-								hourFlightHonorarLabel.setVisible(true);
-								cur4Label.setVisible(true);
-								cur5Label.setVisible(true);
-							} else {
-								// Tagessatz
-								dayNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee, roundTripTicket, hotelCosts, railBonus, overnightStay, sconto))));
-								hourNetLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee, roundTripTicket, hotelCosts, railBonus, overnightStay, sconto)/hoursPerDay)));
-								dayFlightHonorarLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee, roundTripTicket, hotelCosts, 1.0, overnightStay, sconto))));
-								hourFlightHonorarLabel.setText(String.valueOf(f.format(price.reCalculateHonorar(fee, roundTripTicket, hotelCosts, 1.0, overnightStay, sconto)/hoursPerDay)));
-								dayNetLabel.setVisible(true);
-								hourPriceLabel.setVisible(true);
-								cur2Label.setVisible(true);
-								cur3Label.setVisible(true);
-								dayFlightHonorarLabel.setVisible(true);
-								hourFlightHonorarLabel.setVisible(true);
-								cur4Label.setVisible(true);
-								cur5Label.setVisible(true);
-							}
-						}
-					}
+					dayPriceLabel.setText("Netto-Tagessatz");
+					dayPriceLabel.setVisible(true);
+					hourPriceLabel.setText("Netto-Stundensatz");
+					hourPriceLabel.setVisible(true);
+					dayAmountLabel.setText(String.valueOf(f.format(price.netFeeCalculator(
+							city, 
+							travelDistance, 
+							fee, 
+							hoursPerDay, 
+							sconto, 
+							projektdays, 
+							overnightStay,
+							carCheckBox.isSelected()))));
+					dayAmountLabel.setVisible(true);
+					hourAmountLabel.setText(String.valueOf(f.format(price.netFeeCalculator(
+							city, 
+							travelDistance, 
+							fee, 
+							hoursPerDay, 
+							sconto, 
+							projektdays, 
+							overnightStay,
+							carCheckBox.isSelected())/hoursPerDay)));
+					hourAmountLabel.setVisible(true);
+					cur2Label.setVisible(true);
+					cur3Label.setVisible(true);
 				} else {
 					JOptionPane.showOptionDialog(null, "Für diese Stadt gibt es noch keine Daten. Sollen diese jetzt angelegt werden?","Fehlende Daten",
 			                JOptionPane.YES_NO_CANCEL_OPTION,
@@ -411,14 +315,13 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 				scontoComboBox.setSelectedIndex(2);
 				scontoCheckBox.setSelected(false);
 				overnightStayComboBox.setSelectedIndex(4);
-				dayNetLabel.setVisible(false);
-				hourNetLabel.setVisible(false);
-				dayFlightHonorarLabel.setVisible(false);
-				hourFlightHonorarLabel.setVisible(false);
+				dayAmountLabel.setVisible(false);
+				hourAmountLabel.setVisible(false);
+				dayPriceLabel.setVisible(false);
+				hourPriceLabel.setVisible(false);
 				cur2Label.setVisible(false);
 				cur3Label.setVisible(false);
-				cur4Label.setVisible(false);
-				cur5Label.setVisible(false);
+
 			}
 		});
 		resetButton.setFont(new Font("Dialog", Font.BOLD, 12));
@@ -437,124 +340,82 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		
 		cur3Label = new JLabel("EUR");
 		cur3Label.setFont(new Font("Dialog", Font.BOLD, 12));
+		cur3Label.setVisible(false);
 		
-		railBonus25RadioButton = new JRadioButton("Bahncard25");
-		buttonGroup.add(railBonus25RadioButton);
-		railBonus25RadioButton.setFont(new Font("Dialog", Font.PLAIN, 12));
+		hourAmountLabel = new JLabel("hAmount");
+		hourAmountLabel.setForeground(new Color(0, 0, 0));
+		hourAmountLabel.setFont(new Font("Dialog", Font.BOLD, 12));
+		hourAmountLabel.setVisible(false);
 		
-		railBonus50RadioButton = new JRadioButton("Bahncard50");
-		buttonGroup.add(railBonus50RadioButton);
-		railBonus50RadioButton.setFont(new Font("Dialog", Font.PLAIN, 12));
+		carCheckBox = new JCheckBox("Autobenutzung");
+		carCheckBox.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
-		railBonus100RadioButton = new JRadioButton("Bahncard100");
-		buttonGroup.add(railBonus100RadioButton);
-		railBonus100RadioButton.setFont(new Font("Dialog", Font.PLAIN, 12));
+		hoursPerDayTextField = new JTextField();
+		hoursPerDayTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
+		hoursPerDayTextField.setText(String.valueOf(workingHours));
+		hoursPerDayTextField.setColumns(10);
 		
-		dayFlightHonorarLabel = new JLabel("Flight");
-		dayFlightHonorarLabel.setForeground(new Color(0, 128, 0));
-		dayFlightHonorarLabel.setFont(new Font("Dialog", Font.BOLD, 12));
-		dayFlightHonorarLabel.setVisible(false);
-		
-		hourFlightHonorarLabel = new JLabel("Flight");
-		hourFlightHonorarLabel.setForeground(new Color(0, 128, 0));
-		hourFlightHonorarLabel.setFont(new Font("Dialog", Font.BOLD, 12));
-		hourFlightHonorarLabel.setVisible(false);
-		
-		cur4Label = new JLabel("EUR (Flug)");
-		cur4Label.setForeground(new Color(0, 128, 0));
-		cur4Label.setFont(new Font("Dialog", Font.BOLD, 12));
-		cur4Label.setVisible(false);
-		
-		cur5Label = new JLabel("EUR (Flug)");
-		cur5Label.setForeground(new Color(0, 128, 0));
-		cur5Label.setFont(new Font("Dialog", Font.BOLD, 12));
-		cur5Label.setVisible(false);
-		
-		hourNetLabel = new JLabel("Hour");
-		hourNetLabel.setForeground(new Color(0, 0, 0));
-		hourNetLabel.setFont(new Font("Dialog", Font.BOLD, 12));
+		JLabel hoursPerDayLabel = new JLabel("Stunden pro Tag");
+		hoursPerDayLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_contentPane.createSequentialGroup()
+					.addContainerGap()
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING, false)
+							.addGroup(gl_contentPane.createSequentialGroup()
+								.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+									.addComponent(originCityLabel)
+									.addComponent(targetCityLabel)
+									.addComponent(allInFeeLabel))
+								.addGap(41)
+								.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
+									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING, false)
+										.addComponent(originCityTextField)
+										.addComponent(targetCityComboBox, 0, 250, Short.MAX_VALUE))
+									.addGroup(gl_contentPane.createSequentialGroup()
+										.addComponent(allInFeeTextField, GroupLayout.PREFERRED_SIZE, 85, GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(cur1Label)
+										.addGap(18)
+										.addComponent(scontoCheckBox)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(scontoComboBox, GroupLayout.PREFERRED_SIZE, 49, GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(scontoLabel))))
+							.addGroup(gl_contentPane.createSequentialGroup()
+								.addComponent(calculateButton)
+								.addPreferredGap(ComponentPlacement.UNRELATED)
+								.addComponent(resetButton)
+								.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+								.addComponent(closeButton)))
 						.addGroup(gl_contentPane.createSequentialGroup()
-							.addComponent(calculateButton)
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+								.addComponent(hourPriceLabel)
+								.addComponent(dayPriceLabel))
+							.addPreferredGap(ComponentPlacement.UNRELATED)
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+								.addComponent(dayAmountLabel)
+								.addComponent(hourAmountLabel))
 							.addGap(18)
-							.addComponent(resetButton)
-							.addGap(18)
-							.addComponent(closeButton))
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+								.addComponent(cur3Label)
+								.addComponent(cur2Label)))
+						.addComponent(carCheckBox)
 						.addGroup(gl_contentPane.createSequentialGroup()
-							.addContainerGap()
+							.addComponent(daysProjectLabel)
+							.addGap(18)
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING, false)
+								.addComponent(hoursPerDayTextField, Alignment.LEADING, 0, 0, Short.MAX_VALUE)
+								.addComponent(daysProjectComboBox, Alignment.LEADING, 0, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+							.addPreferredGap(ComponentPlacement.UNRELATED)
 							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 								.addGroup(gl_contentPane.createSequentialGroup()
-									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-										.addComponent(originCityLabel)
-										.addComponent(targetCityLabel)
-										.addComponent(allInFeeLabel)
-										.addComponent(daysProjectLabel))
-									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-										.addGroup(gl_contentPane.createSequentialGroup()
-											.addGap(20)
-											.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-												.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING, false)
-													.addComponent(originCityTextField)
-													.addComponent(targetCityComboBox, 0, 250, Short.MAX_VALUE))
-												.addGroup(gl_contentPane.createSequentialGroup()
-													.addComponent(allInFeeTextField, GroupLayout.PREFERRED_SIZE, 85, GroupLayout.PREFERRED_SIZE)
-													.addPreferredGap(ComponentPlacement.RELATED)
-													.addComponent(cur1Label)
-													.addGap(18)
-													.addComponent(scontoCheckBox)
-													.addPreferredGap(ComponentPlacement.RELATED)
-													.addComponent(scontoComboBox, GroupLayout.PREFERRED_SIZE, 49, GroupLayout.PREFERRED_SIZE)
-													.addPreferredGap(ComponentPlacement.RELATED)
-													.addComponent(scontoLabel))))
-										.addGroup(gl_contentPane.createSequentialGroup()
-											.addGap(18)
-											.addComponent(daysProjectComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-											.addPreferredGap(ComponentPlacement.UNRELATED)
-											.addComponent(overnightStayLabel)
-											.addPreferredGap(ComponentPlacement.RELATED)
-											.addComponent(overnightStayComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))))
-								.addGroup(gl_contentPane.createSequentialGroup()
-									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-										.addGroup(gl_contentPane.createSequentialGroup()
-											.addGap(133)
-											.addComponent(railBonus50RadioButton))
-										.addGroup(gl_contentPane.createSequentialGroup()
-											.addComponent(hourPriceLabel)
-											.addPreferredGap(ComponentPlacement.UNRELATED)
-											.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-												.addGroup(gl_contentPane.createSequentialGroup()
-													.addComponent(dayNetLabel)
-													.addGap(18)
-													.addComponent(cur2Label))
-												.addGroup(gl_contentPane.createSequentialGroup()
-													.addComponent(hourNetLabel)
-													.addPreferredGap(ComponentPlacement.UNRELATED)
-													.addComponent(cur3Label)))))
-									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-										.addGroup(gl_contentPane.createSequentialGroup()
-											.addGap(33)
-											.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-												.addGroup(gl_contentPane.createSequentialGroup()
-													.addComponent(hourFlightHonorarLabel)
-													.addPreferredGap(ComponentPlacement.RELATED)
-													.addComponent(cur5Label))
-												.addGroup(gl_contentPane.createSequentialGroup()
-													.addComponent(dayFlightHonorarLabel)
-													.addPreferredGap(ComponentPlacement.RELATED)
-													.addComponent(cur4Label))))
-										.addGroup(gl_contentPane.createSequentialGroup()
-											.addGap(21)
-											.addComponent(railBonus100RadioButton))))))
-						.addGroup(gl_contentPane.createSequentialGroup()
-							.addContainerGap()
-							.addComponent(dayPriceLabel))
-						.addGroup(gl_contentPane.createSequentialGroup()
-							.addContainerGap()
-							.addComponent(railBonus25RadioButton)))
+									.addComponent(overnightStayLabel)
+									.addPreferredGap(ComponentPlacement.RELATED)
+									.addComponent(overnightStayComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+								.addComponent(hoursPerDayLabel))))
 					.addContainerGap(24, Short.MAX_VALUE))
 		);
 		gl_contentPane.setVerticalGroup(
@@ -580,36 +441,33 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 								.addComponent(scontoLabel))
 							.addComponent(scontoCheckBox)))
 					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addComponent(carCheckBox)
+					.addGap(12)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-						.addComponent(daysProjectLabel)
 						.addComponent(daysProjectComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 						.addComponent(overnightStayLabel)
-						.addComponent(overnightStayComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addGap(18)
-					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-						.addComponent(railBonus25RadioButton)
-						.addComponent(railBonus50RadioButton)
-						.addComponent(railBonus100RadioButton))
-					.addGap(15)
-					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-						.addComponent(dayPriceLabel)
-						.addComponent(dayNetLabel)
-						.addComponent(dayFlightHonorarLabel)
-						.addComponent(cur4Label)
-						.addComponent(cur2Label))
+						.addComponent(overnightStayComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(daysProjectLabel))
 					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
+						.addComponent(hoursPerDayTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(hoursPerDayLabel))
+					.addGap(20)
+					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
+						.addComponent(dayPriceLabel)
+						.addComponent(dayAmountLabel)
+						.addComponent(cur2Label))
+					.addPreferredGap(ComponentPlacement.RELATED)
+					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(hourPriceLabel)
-						.addComponent(hourFlightHonorarLabel)
-						.addComponent(cur5Label)
-						.addComponent(hourNetLabel)
+						.addComponent(hourAmountLabel)
 						.addComponent(cur3Label))
 					.addGap(18)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-						.addComponent(calculateButton)
+						.addComponent(closeButton)
 						.addComponent(resetButton)
-						.addComponent(closeButton))
-					.addContainerGap(13, Short.MAX_VALUE))
+						.addComponent(calculateButton))
+					.addContainerGap(8, Short.MAX_VALUE))
 		);
 		contentPane.setLayout(gl_contentPane);
 	}
