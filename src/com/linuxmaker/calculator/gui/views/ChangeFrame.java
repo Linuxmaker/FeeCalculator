@@ -35,7 +35,11 @@ import java.util.Vector;
 import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
 
+import com.linuxmaker.calculator.ComboBoxModel;
 import com.linuxmaker.calculator.XMLCreator;
+
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 
 /**
  * @author Andreas Günther, IT-LINUXMAKER
@@ -47,9 +51,9 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 	private JFormattedTextField RailTicketMonthFTextField;
 	private JTextField RailTicketNormalTextField;
 	private JTextField HotelCostTextField;
-	private JTextField FlightTicketTextField;
 	private JComboBox targetCityComboBox;
 	private DefaultComboBoxModel comboBoxModel;
+	private ComboBoxModel myComboBoxModel;
 	private XMLCreator element;
 
 	/**
@@ -90,25 +94,23 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 		CityLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
 		
 		targetCityComboBox = new JComboBox<String>();
-		/*
-		 * Städte in Liste einlesen
-		 */
-		Vector<String> cities = new Vector<String>();
-		XMLCreator cityList = new XMLCreator();
-		for (int i = 0; i < cityList.CityList().size(); i++) {
-			cities.add(cityList.CityList().get(i));
-		}
+		targetCityComboBox.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				myComboBoxModel.reload();
+				targetCityComboBox.setModel(myComboBoxModel);				
+			}
+		});
 		/*
 		 * ComboBoxModel erzeugen
 		 */
-		comboBoxModel = new DefaultComboBoxModel<String>(cities);
-		comboBoxModel.addListDataListener(this);
+		myComboBoxModel = new ComboBoxModel();
+
 		/*
 		 * ComboBoxModel setzen
 		 */
-		targetCityComboBox.setModel(comboBoxModel);
-		targetCityComboBox.setFont(new Font("Dialog", Font.PLAIN, 11));
-		targetCityComboBox.addActionListener((ActionListener) this);
+		myComboBoxModel.reload();
+		targetCityComboBox.setModel(myComboBoxModel);
 		
 		element = new XMLCreator();
 		
@@ -131,14 +133,6 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 		HotelCostTextField.setColumns(10);
 		HotelCostTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(5));
 		
-		JLabel FlightTicketLabel = new JLabel("Flugticket");
-		FlightTicketLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
-		
-		FlightTicketTextField = new JTextField();
-		FlightTicketTextField.setFont(new Font("Dialog", Font.PLAIN, 11));
-		FlightTicketTextField.setColumns(10);
-		FlightTicketTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(6));
-		
 		JLabel cur1Label = new JLabel("EUR");
 		cur1Label.setFont(new Font("Dialog", Font.PLAIN, 11));
 		
@@ -148,14 +142,11 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 		JLabel cur3Label = new JLabel("EUR");
 		cur3Label.setFont(new Font("Dialog", Font.PLAIN, 11));
 		
-		JLabel cur4Label = new JLabel("EUR");
-		cur4Label.setFont(new Font("Dialog", Font.PLAIN, 11));
-		
 		JButton ChangeButton = new JButton("Ändern");
 		ChangeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				XMLCreator change = new XMLCreator();
-				change.changeXML((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(0), RailTicketMonthFTextField.getText(), RailTicketNormalTextField.getText(), HotelCostTextField.getText(), FlightTicketTextField.getText());
+				change.changeXML((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(0), RailTicketMonthFTextField.getText(), RailTicketNormalTextField.getText(), HotelCostTextField.getText());
 			}
 
 		});
@@ -198,18 +189,13 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING, false)
 								.addComponent(RailTicketMonthFTextField)
 								.addComponent(HotelCostTextField, 0, 0, Short.MAX_VALUE)
-								.addComponent(RailTicketNormalTextField, GroupLayout.DEFAULT_SIZE, 98, Short.MAX_VALUE)
-								.addComponent(FlightTicketTextField, 0, 0, Short.MAX_VALUE))
+								.addComponent(RailTicketNormalTextField, GroupLayout.DEFAULT_SIZE, 98, Short.MAX_VALUE))
 							.addPreferredGap(ComponentPlacement.RELATED)
 							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 								.addComponent(cur3Label)
 								.addComponent(cur1Label)
-								.addComponent(cur2Label)
-								.addComponent(cur4Label))))
+								.addComponent(cur2Label))))
 					.addGap(107))
-				.addGroup(gl_contentPane.createSequentialGroup()
-					.addComponent(FlightTicketLabel, GroupLayout.DEFAULT_SIZE, 181, Short.MAX_VALUE)
-					.addGap(213))
 				.addGroup(gl_contentPane.createSequentialGroup()
 					.addComponent(ChangeButton)
 					.addPreferredGap(ComponentPlacement.RELATED)
@@ -242,13 +228,7 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 								.addComponent(HotelCostTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 								.addComponent(cur3Label)
 								.addComponent(HotelCostLabel))))
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-						.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-							.addComponent(FlightTicketLabel)
-							.addComponent(FlightTicketTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-						.addComponent(cur4Label))
-					.addGap(18)
+					.addGap(38)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(ChangeButton)
 						.addComponent(DeleteButton)
@@ -286,6 +266,5 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 		RailTicketMonthFTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(3));
 		RailTicketNormalTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(4));
 		HotelCostTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(5));
-		FlightTicketTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(6));
 	}
 }
