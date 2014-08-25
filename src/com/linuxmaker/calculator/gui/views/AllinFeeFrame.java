@@ -34,6 +34,7 @@ import com.linuxmaker.calculator.Fee;
 import com.linuxmaker.calculator.Settings;
 import com.linuxmaker.calculator.XMLCreator;
 import com.linuxmaker.calculator.XmlFileWriter;
+import com.linuxmaker.calculator.OnlyNumbersVerifier;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -85,6 +86,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 	private JTextField hoursPerDayTextField;
 	private final JComboBox<String> daysProjectComboBox;
 	private JCheckBox carCheckBox;
+	private Double fee;
 	
 	/**
 	 * Launch the application.
@@ -259,8 +261,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 			}
 		});
 		targetCityComboBox.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				
+			public void actionPerformed(ActionEvent arg0) {				
 				dayPriceLabel.setVisible(false);
 				hourPriceLabel.setVisible(false);
 				hourHonorarLabel.setVisible(false);
@@ -291,7 +292,6 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		feeLabel.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
 		
 		feeTextField = new JTextField();
-		feeTextField.setText("0.00");
 		feeTextField.setToolTipText("Tageshonorar oder Stundensatz");
 		feeTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		feeTextField.setColumns(10);
@@ -334,7 +334,11 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 				String city = (String) targetCityComboBox.getSelectedItem();
 				String fileName = System.getProperties().getProperty("user.home")+ File.separator + path + File.separator + originCityTextField.getText() + "City.xml";
 				File xmlFile = new File(fileName);
-				Double fee = Double.parseDouble(feeTextField.getText());
+				if (feeTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
+					fee = Double.parseDouble(feeTextField.getText().replace(',', '.'));
+				} else {
+					JOptionPane.showMessageDialog(null, "Es sind nur Zahlenwerte erlaubt!");
+				}
 				Double travelDistance = Double.parseDouble(xmlelement.readXML(city).get(1));
 				int overnightStay = Integer.valueOf((String) overnightStayComboBox.getSelectedItem());
 				Double hoursPerDay = Double.parseDouble(hoursPerDayTextField.getText());

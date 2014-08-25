@@ -88,6 +88,7 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 	private Double railBonus;
 	private JTextField hoursPerDayTextField;
 	private JCheckBox carCheckBox;
+	private Double fee;
 	/**
 	 * Launch the application.
 	 */
@@ -253,7 +254,11 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 				String city = (String) targetCityComboBox.getSelectedItem();
 				String fileName = System.getProperties().getProperty("user.home")+ File.separator + path + File.separator + originCityTextField.getText() + "City.xml";
 				File xmlFile = new File(fileName);
-				Double fee = Double.parseDouble(allInFeeTextField.getText());
+				if (allInFeeTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
+					fee = Double.parseDouble(allInFeeTextField.getText().replace(',', '.'));
+				} else {
+					JOptionPane.showMessageDialog(null, "Es sind nur Zahlenwerte erlaubt!");
+				}
 				Double travelDistance = Double.parseDouble(xmlelement.readXML(city).get(1));
 				int overnightStay = Integer.valueOf((String) overnightStayComboBox.getSelectedItem());
 				Double hoursPerDay = Double.parseDouble(hoursPerDayTextField.getText());
