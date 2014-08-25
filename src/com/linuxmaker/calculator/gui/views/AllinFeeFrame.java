@@ -34,7 +34,6 @@ import com.linuxmaker.calculator.Fee;
 import com.linuxmaker.calculator.Settings;
 import com.linuxmaker.calculator.XMLCreator;
 import com.linuxmaker.calculator.XmlFileWriter;
-import com.linuxmaker.calculator.OnlyNumbersVerifier;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
