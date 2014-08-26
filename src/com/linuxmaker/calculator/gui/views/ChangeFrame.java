@@ -40,6 +40,8 @@ import com.linuxmaker.calculator.XMLCreator;
 
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 
 /**
  * @author Andreas Günther, IT-LINUXMAKER
@@ -48,7 +50,7 @@ import java.awt.event.FocusEvent;
 public class ChangeFrame extends JFrame implements ListDataListener, ActionListener  {
 
 	private JPanel contentPane;
-	private JFormattedTextField RailTicketMonthFTextField;
+	private JTextField RailTicketMonthFTextField;
 	private JTextField RailTicketNormalTextField;
 	private JTextField HotelCostTextField;
 	private JComboBox<String> targetCityComboBox;
@@ -93,6 +95,16 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 		CityLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
 		
 		targetCityComboBox = new JComboBox<String>();
+		targetCityComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent itemEvent) {
+				int state = itemEvent.getStateChange();
+				if (state == ItemEvent.SELECTED) {
+					RailTicketMonthFTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(3).replace('.', ','));
+					RailTicketNormalTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(4).replace('.', ','));
+					HotelCostTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(5).replace('.', ','));
+				}
+			}
+		});
 		targetCityComboBox.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
@@ -145,13 +157,23 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 		ChangeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				XMLCreator change = new XMLCreator();
-				change.changeXML((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(0), RailTicketMonthFTextField.getText(), RailTicketNormalTextField.getText(), HotelCostTextField.getText());
+				change.changeXML((String) element.readXML(
+						(String) targetCityComboBox.getSelectedItem()).get(0), 
+						RailTicketMonthFTextField.getText().replace(',', '.'), 
+						RailTicketNormalTextField.getText().replace(',', '.'), 
+						HotelCostTextField.getText().replace(',', '.')
+						);
 			}
 
 		});
 		ChangeButton.setFont(new Font("Dialog", Font.BOLD, 11));
 		
 		JButton DeleteButton = new JButton("Löschen");
+		DeleteButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				System.out.println("Löschen");
+			}
+		});
 		DeleteButton.setToolTipText("Löschen des Eintrages");
 		DeleteButton.setFont(new Font("Dialog", Font.BOLD, 11));
 		
@@ -167,7 +189,7 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 		});
 		closeButton.setFont(new Font("Dialog", Font.BOLD, 11));
 		
-		RailTicketMonthFTextField = new JFormattedTextField(new DecimalFormat("#,##"));
+		RailTicketMonthFTextField = new JTextField();
 		RailTicketMonthFTextField.setFont(new Font("Dialog", Font.PLAIN, 11));
 		RailTicketMonthFTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(3));
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
