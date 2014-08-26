@@ -24,6 +24,7 @@ import javax.xml.xpath.XPathExpressionException;
 import org.jdom2.JDOMException;
 import org.xml.sax.SAXException;
 
+import com.linuxmaker.calculator.Compare;
 import com.linuxmaker.calculator.Parser;
 import com.linuxmaker.calculator.Settings;
 import com.linuxmaker.calculator.XMLCreator;
@@ -34,6 +35,8 @@ import java.io.IOException;
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.Color;
+
+import javax.swing.JCheckBox;
 
 /**
  * @author Andreas Günther, IT-LINUXMAKER
@@ -57,9 +60,11 @@ public class AddFrame extends JFrame {
 	private JLabel eur2Label;
 	private JLabel eur3Label;
 	private JLabel resultLabel;
+	private JCheckBox publicTransportCheckBox;
 	private String originCity = new Settings().readSettings("pointOfDeparture");
 	private String drivingTime = new Settings().readSettings("drivingTime");
 	private String maxDistance = new Settings().readSettings("maxdistance");
+	private Compare cityCompare = new Compare();
 	/**
 	 * Launch the application.
 	 */
@@ -97,93 +102,99 @@ public class AddFrame extends JFrame {
 		setContentPane(contentPane);
 		
 		final JLabel cityLabel = new JLabel("Projekt-Stadt");
-		cityLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
+		cityLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		cityTextField = new JTextField();
-		cityTextField.setFont(new Font("Dialog", Font.PLAIN, 11));
+		cityTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		cityTextField.setColumns(10);
 		
 		JButton searchButton = new JButton("Suchen");
-		searchButton.setFont(new Font("Dialog", Font.BOLD, 11));
+		searchButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		searchButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Parser search = new Parser();
-				try {
-					if (search.parsedistance(originCity, cityTextField.getText()) <= Double.parseDouble(maxDistance)) {
-						railTicketMonthTextField.setEnabled(true);
-						railTicketTwoTextField.setEnabled(true);
-					} else {
-						railTicketMonthTextField.setEnabled(false);
-						railTicketTwoTextField.setEnabled(true);	
+				if (cityCompare.compare(cityTextField.getText())) {
+					resultLabel.setText("Die Stadt existiert bereits!");
+					resultLabel.setFont(new Font("Dialog", Font.BOLD, 9));
+					resultLabel.setVisible(true);
+				} else {
+					Parser search = new Parser();
+					try {
+						if (search.parsedistance(originCity, cityTextField.getText()) <= Double.parseDouble(maxDistance)) {
+							railTicketMonthTextField.setEnabled(true);
+							railTicketTwoTextField.setEnabled(true);
+							publicTransportCheckBox.setEnabled(true);
+						} else {
+							railTicketMonthTextField.setEnabled(false);
+							railTicketTwoTextField.setEnabled(true);
+							publicTransportCheckBox.setEnabled(false);
+						}
+						if (search.parseduration(originCity, cityTextField.getText()) <= Double.parseDouble(drivingTime)) {
+							hotelCostsTextField.setEnabled(false);
+						} else {
+							hotelCostsTextField.setEnabled(true);
+							publicTransportCheckBox.setEnabled(false);
+						}
+					} catch (XPathExpressionException | SAXException | IOException | ParserConfigurationException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
 					}
-					if (search.parseduration(originCity, cityTextField.getText()) <= Double.parseDouble(drivingTime)) {
-						hotelCostsTextField.setEnabled(false);
-					} else {
-						hotelCostsTextField.setEnabled(true);
-					}
-				} catch (XPathExpressionException | SAXException | IOException | ParserConfigurationException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
 				}
 			}
 		});
 		
 		railTicketTwoLabel = new JLabel("Bahnticket");
-		railTicketTwoLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
+		railTicketTwoLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		railTicketTwoTextField = new JTextField();
-		railTicketTwoTextField.setFont(new Font("Dialog", Font.PLAIN, 11));
+		railTicketTwoTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		railTicketTwoTextField.setEnabled(false);
-		railTicketTwoTextField.setText("0.00");
 		railTicketTwoTextField.setToolTipText("Betrag für die Hin- und Rückfahrt der DB AG");
 		railTicketTwoTextField.setColumns(10);
 		
 		railTicketMonthLabel = new JLabel("Monatsfahrkarte");
-		railTicketMonthLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
+		railTicketMonthLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		railTicketMonthTextField = new JTextField();
-		railTicketMonthTextField.setFont(new Font("Dialog", Font.PLAIN, 11));
+		railTicketMonthTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		railTicketMonthTextField.setEnabled(false);
-		railTicketMonthTextField.setText("0.00");
 		railTicketMonthTextField.setColumns(10);
 		
 		hotelCostsLabel = new JLabel("Hotelkosten");
-		hotelCostsLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
+		hotelCostsLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		hotelCostsTextField = new JTextField();
-		hotelCostsTextField.setFont(new Font("Dialog", Font.PLAIN, 11));
+		hotelCostsTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		hotelCostsTextField.setEnabled(false);
-		hotelCostsTextField.setText("0.00");
 		hotelCostsTextField.setColumns(10);
 		
 		eur1Label = new JLabel("EUR");		
-		eur1Label.setFont(new Font("Dialog", Font.PLAIN, 11));
+		eur1Label.setFont(new Font("Dialog", Font.PLAIN, 12));
 		eur2Label = new JLabel("EUR");		
-		eur2Label.setFont(new Font("Dialog", Font.PLAIN, 11));
+		eur2Label.setFont(new Font("Dialog", Font.PLAIN, 12));
 		eur3Label = new JLabel("EUR");		
-		eur3Label.setFont(new Font("Dialog", Font.PLAIN, 11));
-		
+		eur3Label.setFont(new Font("Dialog", Font.PLAIN, 12));
+
 		JButton addButton = new JButton("Hinzufügen");
 		addButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				XMLCreator writer = new XMLCreator();
-				//if (cityTextField.getText().equals(true)) {
-					Parser search = new Parser();
-					try {
-						writer.writeXML(cityTextField.getText(), railTicketMonthTextField.getText(), railTicketTwoTextField.getText(), hotelCostsTextField.getText());
-						resultLabel.setVisible(true);
-					} catch (XPathExpressionException | SAXException
-							| ParserConfigurationException | JDOMException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-			/*	} else {
-					JOptionPane.showMessageDialog(null, "Bitte den Ort des Projektes angeben!");
-				}*/
+				try {
+					writer.writeXML(
+							cityTextField.getText(), 
+							railTicketMonthTextField.getText().replace(',', '.'), 
+							railTicketTwoTextField.getText().replace(',', '.'), 
+							hotelCostsTextField.getText().replace(',', '.'), 
+							String.valueOf(publicTransportCheckBox.isSelected()));
+					resultLabel.setVisible(true);
+				} catch (XPathExpressionException | SAXException
+						| ParserConfigurationException | JDOMException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				reset();
 			}
 		});
-		addButton.setFont(new Font("Dialog", Font.BOLD, 11));
+		addButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
 		JButton clearButton = new JButton("Löschen");
 		clearButton.addActionListener(new ActionListener() {
@@ -192,7 +203,7 @@ public class AddFrame extends JFrame {
 				resultLabel.setVisible(false);
 			}
 		});
-		clearButton.setFont(new Font("Dialog", Font.BOLD, 11));
+		clearButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
 		final JButton closeButton = new JButton("Beenden");
 		closeButton.addActionListener(new ActionListener() {
@@ -204,12 +215,16 @@ public class AddFrame extends JFrame {
 				((JFrame) frame).dispose();
 			}
 		});
-		closeButton.setFont(new Font("Dialog", Font.BOLD, 11));
+		closeButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
 		resultLabel = new JLabel("Erfolgreich angelegt!");
 		resultLabel.setVisible(false);
 		resultLabel.setForeground(new Color(0, 0, 205));
-		resultLabel.setFont(new Font("Dialog", Font.BOLD, 11));
+		resultLabel.setFont(new Font("Dialog", Font.BOLD, 12));
+		
+		publicTransportCheckBox = new JCheckBox("Liegt im ÖPNV");
+		publicTransportCheckBox.setFont(new Font("Dialog", Font.PLAIN, 12));
+		publicTransportCheckBox.setEnabled(false);
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -237,14 +252,15 @@ public class AddFrame extends JFrame {
 										.addComponent(eur1Label)))
 								.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
 									.addComponent(searchButton)
-									.addComponent(cityTextField, GroupLayout.PREFERRED_SIZE, 201, GroupLayout.PREFERRED_SIZE))))
+									.addComponent(cityTextField, GroupLayout.PREFERRED_SIZE, 201, GroupLayout.PREFERRED_SIZE))
+								.addComponent(publicTransportCheckBox)))
 						.addGroup(gl_contentPane.createSequentialGroup()
 							.addComponent(addButton)
 							.addPreferredGap(ComponentPlacement.UNRELATED)
 							.addComponent(clearButton)
 							.addPreferredGap(ComponentPlacement.UNRELATED)
 							.addComponent(closeButton)))
-					.addContainerGap(27, Short.MAX_VALUE))
+					.addContainerGap(14, Short.MAX_VALUE))
 		);
 		gl_contentPane.setVerticalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -273,7 +289,9 @@ public class AddFrame extends JFrame {
 						.addComponent(hotelCostsTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 						.addComponent(eur3Label)
 						.addComponent(hotelCostsLabel))
-					.addGap(31)
+					.addGap(5)
+					.addComponent(publicTransportCheckBox)
+					.addPreferredGap(ComponentPlacement.RELATED)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(addButton)
 						.addComponent(clearButton)
@@ -286,10 +304,7 @@ public class AddFrame extends JFrame {
 	protected void reset() {
 		cityTextField.setText("");
 		railTicketTwoTextField.setEnabled(false);
-		railTicketTwoTextField.setText("0.00");
 		railTicketMonthTextField.setEnabled(false);
-		railTicketMonthTextField.setText("0.00");
 		hotelCostsTextField.setEnabled(false);
-		hotelCostsTextField.setText("0.00");
 	}
 }

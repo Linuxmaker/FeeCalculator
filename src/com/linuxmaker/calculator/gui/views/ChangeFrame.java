@@ -51,8 +51,7 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 	private JFormattedTextField RailTicketMonthFTextField;
 	private JTextField RailTicketNormalTextField;
 	private JTextField HotelCostTextField;
-	private JComboBox targetCityComboBox;
-	private DefaultComboBoxModel comboBoxModel;
+	private JComboBox<String> targetCityComboBox;
 	private ComboBoxModel myComboBoxModel;
 	private XMLCreator element;
 
