@@ -10,6 +10,7 @@ import static com.linuxmaker.calculator.Constants.ELEMENT_DURATION;
 import static com.linuxmaker.calculator.Constants.ELEMENT_HOTEL;
 import static com.linuxmaker.calculator.Constants.ELEMENT_TICKET;
 import static com.linuxmaker.calculator.Constants.ELEMENT_DTICKET;
+import static com.linuxmaker.calculator.Constants.ELEMENT_PUBLICTRANSPORT;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -49,15 +50,25 @@ public class XMLCreator {
 	String ticket = "0.0";
 	String hotel = "0.0";
 	String flightcost = "0.0";
+	String publictransport;
 
 	public XMLCreator() {
 		super();
 	}
 	
-	public void writeXML(String cityName, String ticket, String dticket, String hotel) throws XPathExpressionException, SAXException, ParserConfigurationException, JDOMException {
+	public void writeXML(String cityName, String ticket, String dticket, String hotel, String publictransport) throws XPathExpressionException, SAXException, ParserConfigurationException, JDOMException {
 		Parser distance = new Parser();
 		Parser duration = new Parser();
 		try {
+			if (ticket.length() == 0) {
+				ticket = "0.00";
+			}
+			if (dticket.length() == 0) {
+				dticket = "0.00";
+			}
+			if (hotel.length() == 0) {
+				hotel = "0.00";
+			}
 			SAXBuilder builder = new SAXBuilder();
 			Document document = builder.build(xmlFile);
 
@@ -69,6 +80,7 @@ public class XMLCreator {
 			city.addContent(new Element(ELEMENT_TICKET).setText(ticket));
 			city.addContent(new Element(ELEMENT_DTICKET).setText(dticket));
 			city.addContent(new Element(ELEMENT_HOTEL).setText(hotel));
+			city.addContent(new Element(ELEMENT_PUBLICTRANSPORT).setText(publictransport));
 			xmlRoot.addContent(city);
 
 			XMLOutputter xmlOutput = new XMLOutputter();
@@ -99,7 +111,8 @@ public class XMLCreator {
 					results.add(element.getChildText(ELEMENT_DURATION));
 					results.add(element.getChildText(ELEMENT_TICKET));
 					results.add(element.getChildText(ELEMENT_DTICKET));
-					results.add(element.getChildText(ELEMENT_HOTEL));	
+					results.add(element.getChildText(ELEMENT_HOTEL));
+					results.add(element.getChildText(ELEMENT_PUBLICTRANSPORT));
 				} 
 			}
 		} catch (JDOMException | IOException e) {
@@ -132,6 +145,8 @@ public class XMLCreator {
 					hotelCost.addContent(varHotel);
 					city.removeChild(ELEMENT_HOTEL);
 					city.addContent(hotelCost);
+					city.removeChild(ELEMENT_PUBLICTRANSPORT);
+					city.addContent(publictransport);
 				}
 				
 			}
