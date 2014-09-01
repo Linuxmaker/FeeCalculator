@@ -2,6 +2,7 @@ package com.linuxmaker.calculator.gui.views;
 
 import java.awt.Container;
 import java.awt.EventQueue;
+import java.awt.LayoutManager;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -18,7 +19,6 @@ import java.awt.Font;
 
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
-
 import javax.swing.JButton;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathExpressionException;
@@ -33,6 +33,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
+
 import javax.swing.JRadioButton;
 import javax.swing.ButtonGroup;
 
@@ -45,8 +46,7 @@ public class SettingsFrame extends JFrame {
 	private JPanel contentPane;
 	private JTextField defaultCityTextField;
 	private JTextField workingHoursTextField;
-	private JTextField minDayFeeTextField;
-	private JLabel unit3Label;
+	private JTextField minDayFeeTextField;	
 	private JTextField maxDistanceTextField;
 	private JTextField folderTextField;
 	private JLabel drivingTimeLabel;
@@ -60,7 +60,27 @@ public class SettingsFrame extends JFrame {
 	private JRadioButton railBonusNoRadioButton;
 	private Double railBonus;
 	private JTextField fuelConsumptionTextField;
+	private JButton closeButton;
+	private JButton okayButton;
+	private JButton changeButton;
+	private JTextField publicDistanceTextField;
+	private JLabel unit8Label;
+	private JLabel defaultCityLabel;
+	private JLabel workingHoursLabel;
+	private JLabel minDayFeeLabel;
+	private JLabel consumptionLabel;
+	private JLabel fuelConsumptionLabel;
+	private JLabel maxDistanceLabel;
+	private JLabel fuelCostLabel;
+	private JLabel publicTransportLabel;
+	private JLabel folderLabel;
+	private JLabel unit1Label;
+	private JLabel unit2Label;
+	private JLabel unit3Label;
+	private JLabel unit4Label;
+	private JLabel unit5Label;
 	private JLabel unit6Label;
+	private JLabel unit7Label;
 	/**
 	 * Launch the application.
 	 */
@@ -84,13 +104,39 @@ public class SettingsFrame extends JFrame {
 		setTitle("Einstellungen");
 		setIconImage(Toolkit.getDefaultToolkit().getImage(SettingsFrame.class.getResource("/com/linuxmaker/calculator/gui/resources/images16x16/currency_euro_yellow.png")));
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setBounds(100, 100, 388, 458);
+		setBounds(100, 100, 388, 478);
 		contentPane = new JPanel();
 		contentPane.setBackground(new Color(250, 250, 210));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
-		
-		JLabel defaultCityLabel = new JLabel("Ausgangsstadt");
+		initializeGuiObjects();
+		contentPane.setLayout(createLayout(defaultCityLabel,
+										   workingHoursLabel,
+										   minDayFeeLabel,
+										   consumptionLabel,
+										   fuelConsumptionLabel,
+										   maxDistanceLabel,
+										   unit1Label,
+										   unit2Label,
+										   unit3Label,
+										   unit4Label,
+										   unit5Label,
+										   unit6Label,
+										   unit7Label,
+										   unit8Label,
+										   fuelCostLabel,
+										   drivingTimeLabel,
+										   publicTransportLabel,
+										   folderLabel,
+										   okayButton,
+										   closeButton));
+	}
+
+	/**
+	 * Initializes the GUI elements
+	 */
+	private void initializeGuiObjects(){
+		defaultCityLabel = new JLabel("Ausgangsstadt");
 		defaultCityLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		defaultCityTextField = new JTextField();
@@ -98,7 +144,7 @@ public class SettingsFrame extends JFrame {
 		defaultCityTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		defaultCityTextField.setColumns(10);
 		
-		JLabel workingHoursLabel = new JLabel("Arbeitsstunden pro Tag");
+		workingHoursLabel = new JLabel("Arbeitsstunden pro Tag");
 		workingHoursLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		workingHoursTextField = new JTextField();
@@ -106,7 +152,7 @@ public class SettingsFrame extends JFrame {
 		workingHoursTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		workingHoursTextField.setColumns(10);
 		
-		JLabel minDayFeeLabel = new JLabel("Mindest-Tageshonorar");
+		minDayFeeLabel = new JLabel("Mindest-Tageshonorar");
 		minDayFeeLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		minDayFeeTextField = new JTextField();
@@ -115,10 +161,10 @@ public class SettingsFrame extends JFrame {
 		minDayFeeTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		minDayFeeTextField.setColumns(10);
 		
-		JLabel unit2Label = new JLabel("EUR");
+		unit2Label = new JLabel("EUR");
 		unit2Label.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
-		JLabel maxDistanceLabel = new JLabel("Maximalstrecke für Monatsticket");
+		maxDistanceLabel = new JLabel("Maximalstrecke für Monatsticket");
 		maxDistanceLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		unit3Label = new JLabel("km");
@@ -139,14 +185,14 @@ public class SettingsFrame extends JFrame {
 		drivingTimeTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		drivingTimeTextField.setColumns(10);
 		
-		JLabel folderLabel = new JLabel("Ablageort");
+		folderLabel = new JLabel("Ablageort");
 		folderLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		folderTextField = new JTextField();
 		folderTextField.setEnabled(false);
 		folderTextField.setColumns(10);
 		
-		final JButton okayButton = new JButton("OK");
+		okayButton = new JButton("OK");
 		okayButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (railBonus25RadioButton.isSelected()) {
@@ -163,12 +209,13 @@ public class SettingsFrame extends JFrame {
 				setValue.generateSettings(workingHoursTextField.getText(), 
 						folderTextField.getText(), 
 						defaultCityTextField.getText(), 
-						maxDistanceTextField.getText(), 
-						minDayFeeTextField.getText(), 
-						drivingTimeTextField.getText(), 
-						consumptionTextField.getText(), 
-						fuelCostTextField.getText(),
-						fuelConsumptionTextField.getText(),
+						maxDistanceTextField.getText().replace(',', '.'), 
+						minDayFeeTextField.getText().replace(',', '.'), 
+						drivingTimeTextField.getText().replace(',', '.'), 
+						consumptionTextField.getText().replace(',', '.'), 
+						fuelCostTextField.getText().replace(',', '.'),
+						fuelConsumptionTextField.getText().replace(',', '.'),
+						publicDistanceTextField.getText().replace(',', '.'),
 						railBonus);
 				
 				if (!folder.isDirectory()) {
@@ -182,7 +229,6 @@ public class SettingsFrame extends JFrame {
 					} catch (DOMException
 							| XPathExpressionException | IOException | SAXException
 							| TransformerException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -196,7 +242,7 @@ public class SettingsFrame extends JFrame {
 		});
 		okayButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
-		final JButton closeButton = new JButton("Abbruch");
+		closeButton = new JButton("Abbruch");
 		closeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				Container frame = closeButton.getParent();
@@ -208,10 +254,9 @@ public class SettingsFrame extends JFrame {
 		});
 		closeButton.setFont(new Font("Dialog", Font.BOLD, 12));
 				
-		JLabel unit7Label = new JLabel("Stunden");
+		unit7Label = new JLabel("Stunden");
 		unit7Label.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
-		JLabel consumptionLabel;
 		consumptionLabel = new JLabel("Fahrtkosten");
 		consumptionLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
@@ -221,11 +266,11 @@ public class SettingsFrame extends JFrame {
 		consumptionTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		consumptionTextField.setColumns(10);
 		
-		JLabel unit4Label = new JLabel("ct/km");
+		unit4Label = new JLabel("ct/km");
 		unit4Label.setToolTipText("Informationen auf www.adac.de");
 		unit4Label.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
-		JLabel fuelCostLabel = new JLabel("Kraftstoffkosten");
+		fuelCostLabel = new JLabel("Kraftstoffkosten");
 		fuelCostLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		fuelCostTextField = new JTextField();
@@ -233,7 +278,7 @@ public class SettingsFrame extends JFrame {
 		fuelCostTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		fuelCostTextField.setColumns(10);
 		
-		JLabel unit5Label = new JLabel("EUR/Liter");
+		unit5Label = new JLabel("EUR/Liter");
 		unit5Label.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		railBonus25RadioButton = new JRadioButton("BahnCard25");
@@ -261,28 +306,37 @@ public class SettingsFrame extends JFrame {
 		fuelConsumptionTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		fuelConsumptionTextField.setColumns(10);
 		
-		JLabel fuelConsumptionLabel = new JLabel("Kraftstoffverbrauch");
+		fuelConsumptionLabel = new JLabel("Kraftstoffverbrauch");
 		fuelConsumptionLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		unit6Label = new JLabel("Liter/100 km");
 		unit6Label.setFont(new Font("Dialog", Font.PLAIN, 12));
 
-		JLabel unit1Label = new JLabel("Stunden");
+		unit1Label = new JLabel("Stunden");
 		unit1Label.setFont(new Font("Dialog", Font.PLAIN, 12));
+		
+		publicTransportLabel = new JLabel("Umkreisradius für ÖPNV");
+		publicTransportLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
+		
+		publicDistanceTextField = new JTextField();
+		publicDistanceTextField.setEnabled(false);
+		publicDistanceTextField.setColumns(10);
+		
+		unit8Label = new JLabel("km");
+		unit8Label.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		if (new File(System.getProperties().getProperty("user.home")+File.separator+".settings.cfg").exists()) {
 			Settings getValue = new Settings();
 			defaultCityTextField.setText(getValue.readSettings("pointOfDeparture"));
-			workingHoursTextField.setText(getValue.readSettings("workinghours"));
-			minDayFeeTextField.setText(getValue.readSettings("minFee"));
-			maxDistanceTextField.setText(getValue.readSettings("maxdistance"));
-			consumptionTextField.setText(getValue.readSettings("consumption"));
-			fuelCostTextField.setText(getValue.readSettings("fuelprice"));
-			fuelConsumptionTextField.setText(getValue.readSettings("fuelConsumption"));
-			drivingTimeTextField.setText(getValue.readSettings("drivingTime"));
-			folderTextField.setText(getValue.readSettings("directory"));
-			
-			
+			workingHoursTextField.setText(getValue.readSettings("workinghours").replace('.', ','));
+			minDayFeeTextField.setText(getValue.readSettings("minFee").replace('.', ','));
+			maxDistanceTextField.setText(getValue.readSettings("maxdistance").replace('.', ','));
+			consumptionTextField.setText(getValue.readSettings("consumption").replace('.', ','));
+			fuelCostTextField.setText(getValue.readSettings("fuelprice").replace('.', ','));
+			fuelConsumptionTextField.setText(getValue.readSettings("fuelConsumption").replace('.', ','));
+			drivingTimeTextField.setText(getValue.readSettings("drivingTime").replace('.', ','));
+			publicDistanceTextField.setText(getValue.readSettings("publicTransport").replace('.', ','));
+			folderTextField.setText(getValue.readSettings("directory"));			
 			switch (getValue.readSettings("railCard")) {
 			case "0.75":
 				railBonus25RadioButton.setSelected(true);
@@ -303,10 +357,10 @@ public class SettingsFrame extends JFrame {
 			maxDistanceTextField.setText("420.00");
 			folderTextField.setText("Data");
 			drivingTimeTextField.setText("2.5");
-			//railBonusNoRadioButton.setSelected(true);
+			railBonusNoRadioButton.setSelected(true);
 		}
 		
-		JButton changeButton = new JButton("Ändern");
+		changeButton = new JButton("Ändern");
 		changeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				defaultCityTextField.setEnabled(true);
@@ -322,10 +376,36 @@ public class SettingsFrame extends JFrame {
 				railBonus50RadioButton.setEnabled(true);
 				railBonus100RadioButton.setEnabled(true);
 				railBonusNoRadioButton.setEnabled(true);
+				publicDistanceTextField.setEnabled(true);
+				changeButton.setEnabled(false);
 			}
 		});
 		changeButton.setFont(new Font("Dialog", Font.BOLD, 12));
-		
+	}
+	
+	/**
+	 * Creates the GUI layout
+	 */
+	private LayoutManager createLayout(JLabel defaultCityLabel, 
+									   JLabel workingHoursLabel, 
+									   JLabel minDayFeeLabel, 
+									   JLabel consumptionLabel, 
+									   JLabel fuelConsumptionLabel, 
+									   JLabel maxDistanceLabel,
+									   JLabel unit1Label,
+									   JLabel unit2Label,
+									   JLabel unit3Label,
+									   JLabel unit4Label,
+									   JLabel unit5Label,
+									   JLabel unit6Label,
+									   JLabel unit7Label,
+									   JLabel unit8Label,
+									   JLabel fuelCostLabel,
+									   JLabel drivingTimeLabel,
+									   JLabel publicTransportLabel,
+									   JLabel folderLabel,
+									   JButton okayButton,
+									   JButton closeButton) {
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -374,6 +454,21 @@ public class SettingsFrame extends JFrame {
 											.addPreferredGap(ComponentPlacement.RELATED)))
 									.addGap(19))
 								.addComponent(fuelCostLabel)
+								.addGroup(gl_contentPane.createSequentialGroup()
+									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+										.addComponent(drivingTimeLabel)
+										.addComponent(publicTransportLabel))
+									.addGap(64)
+									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+										.addComponent(drivingTimeTextField, GroupLayout.PREFERRED_SIZE, 35, GroupLayout.PREFERRED_SIZE)
+										.addGroup(gl_contentPane.createSequentialGroup()
+											.addComponent(publicDistanceTextField, GroupLayout.PREFERRED_SIZE, 49, GroupLayout.PREFERRED_SIZE)
+											.addPreferredGap(ComponentPlacement.UNRELATED)
+											.addComponent(unit8Label)))
+									.addPreferredGap(ComponentPlacement.RELATED, 60, Short.MAX_VALUE)))
+							.addContainerGap())
+						.addGroup(gl_contentPane.createSequentialGroup()
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 								.addComponent(railBonusNoRadioButton)
 								.addGroup(gl_contentPane.createSequentialGroup()
 									.addComponent(railBonus25RadioButton)
@@ -382,23 +477,15 @@ public class SettingsFrame extends JFrame {
 									.addGap(18)
 									.addComponent(railBonus100RadioButton))
 								.addGroup(gl_contentPane.createSequentialGroup()
-									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING, false)
-										.addGroup(gl_contentPane.createSequentialGroup()
-											.addComponent(folderLabel)
-											.addGap(18)
-											.addComponent(folderTextField))
-										.addGroup(gl_contentPane.createSequentialGroup()
-											.addComponent(drivingTimeLabel)
-											.addGap(79)
-											.addComponent(drivingTimeTextField, GroupLayout.PREFERRED_SIZE, 35, GroupLayout.PREFERRED_SIZE)))
-									.addPreferredGap(ComponentPlacement.RELATED, 39, Short.MAX_VALUE)))
-							.addContainerGap())
-						.addGroup(gl_contentPane.createSequentialGroup()
-							.addComponent(changeButton)
-							.addGap(18)
-							.addComponent(okayButton)
-							.addPreferredGap(ComponentPlacement.RELATED, 123, Short.MAX_VALUE)
-							.addComponent(closeButton)
+									.addComponent(folderLabel)
+									.addGap(18)
+									.addComponent(folderTextField, 156, 156, 156))
+								.addGroup(gl_contentPane.createSequentialGroup()
+									.addComponent(changeButton)
+									.addGap(18)
+									.addComponent(okayButton)
+									.addPreferredGap(ComponentPlacement.RELATED, 123, Short.MAX_VALUE)
+									.addComponent(closeButton)))
 							.addGap(16))))
 		);
 		gl_contentPane.setVerticalGroup(
@@ -443,7 +530,12 @@ public class SettingsFrame extends JFrame {
 						.addComponent(drivingTimeLabel)
 						.addComponent(drivingTimeTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 						.addComponent(unit7Label))
-					.addGap(13)
+					.addGap(11)
+					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
+						.addComponent(publicTransportLabel)
+						.addComponent(publicDistanceTextField, GroupLayout.PREFERRED_SIZE, 25, GroupLayout.PREFERRED_SIZE)
+						.addComponent(unit8Label))
+					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(folderLabel)
 						.addComponent(folderTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
@@ -461,6 +553,6 @@ public class SettingsFrame extends JFrame {
 						.addComponent(okayButton))
 					.addContainerGap())
 		);
-		contentPane.setLayout(gl_contentPane);
+		return gl_contentPane;	
 	}
 }

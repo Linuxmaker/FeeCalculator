@@ -10,6 +10,7 @@ import com.linuxmaker.calculator.ComboBoxModel;
 
 import java.awt.Container;
 import java.awt.EventQueue;
+import java.awt.LayoutManager;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -49,6 +50,7 @@ import java.io.File;
 
 import javax.swing.JRadioButton;
 import javax.swing.ButtonGroup;
+
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemListener;
@@ -60,34 +62,44 @@ import java.awt.event.ItemEvent;
  */
 public class NetFeeFrame extends JFrame implements ListDataListener {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private String originCity = new Settings().readSettings("pointOfDeparture");
 	private String path = new Settings().readSettings("directory");
 	private Double workingHours = Double.parseDouble(new Settings().readSettings("workinghours"));
 	private Double maxDistance = Double.parseDouble(new Settings().readSettings("maxdistance"));
 	private Double drivingTime = Double.parseDouble(new Settings().readSettings("drivingTime"));
 	private JPanel contentPane;
-	private JTextField originCityTextField;
+	private JCheckBox carCheckBox;
+	private JCheckBox scontoCheckBox;
+	private JComboBox daysProjectComboBox;
+	private JComboBox overnightStayComboBox;
+	private JComboBox scontoComboBox;
 	private JComboBox<String> targetCityComboBox;
 	private ComboBoxModel myComboBoxModel;
-	private JLabel allInFeeLabel;
+	private JTextField hoursPerDayTextField;
+	private JTextField originCityTextField;
 	private JTextField allInFeeTextField;
+	private JLabel allInFeeLabel;
 	private JLabel cur1Label;
 	private JLabel cur2Label;
 	private JLabel cur3Label;
 	private JLabel scontoLabel;
 	private JLabel daysProjectLabel;
-	private JComboBox daysProjectComboBox;
 	private JLabel overnightStayLabel;
-	private JComboBox overnightStayComboBox;
+	private JLabel targetCityLabel;
+	private JLabel originCityLabel;
+	private JLabel hoursPerDayLabel;
 	private JLabel dayPriceLabel;
 	private JLabel hourPriceLabel;
 	private JLabel dayAmountLabel;
 	private JLabel hourAmountLabel;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
-	private Double sconto;
-	private Double railBonus;
-	private JTextField hoursPerDayTextField;
-	private JCheckBox carCheckBox;
+	private JButton closeButton;
+	private JButton resetButton;
+	private JButton calculateButton;
 	private Double fee;
 	/**
 	 * Launch the application.
@@ -124,8 +136,15 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		setLocationRelativeTo(getParent());
-		
-		JLabel originCityLabel = new JLabel("Ausgangsstadt");
+		initializeGuiObjects();		
+		contentPane.setLayout(createLayout());
+	}
+	
+	/**
+	 * Initializes the GUI elements
+	 */	
+	private void initializeGuiObjects(){
+		originCityLabel = new JLabel("Ausgangsstadt");
 		originCityLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		originCityTextField = new JTextField();
@@ -133,7 +152,7 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		originCityTextField.setColumns(10);
 		originCityTextField.setText(ORIGIN_CITY);
 		
-		JLabel targetCityLabel = new JLabel("Projektstadt");
+	    targetCityLabel = new JLabel("Projektstadt");
 		targetCityLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		targetCityComboBox = new JComboBox<String>();
@@ -177,12 +196,12 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		});
 		
 		/*
-		 * ComboBoxModel erzeugen
+		 * Creates ComboBoxModel
 		 */
 		myComboBoxModel = new ComboBoxModel();
 
 		/*
-		 * ComboBoxModel setzen
+		 * Sets ComboBoxModel
 		 */
 		myComboBoxModel.reload();
 		targetCityComboBox.setModel(myComboBoxModel);
@@ -201,10 +220,10 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		cur1Label = new JLabel("EUR");
 		cur1Label.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
-		final JCheckBox scontoCheckBox = new JCheckBox("");
+		scontoCheckBox = new JCheckBox("");
 		scontoCheckBox.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
-		final JComboBox scontoComboBox = new JComboBox();
+		scontoComboBox = new JComboBox();
 		scontoComboBox.setModel(new DefaultComboBoxModel(new String[] {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}));
 		scontoComboBox.setSelectedIndex(2);
 		scontoCheckBox.setSelected(false);
@@ -245,7 +264,7 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		cur2Label.setFont(new Font("Dialog", Font.BOLD, 12));
 		cur2Label.setVisible(false);
 		
-		JButton calculateButton = new JButton("Netto-Honorar");
+		calculateButton = new JButton("Netto-Honorar");
 		calculateButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				XMLCreator xmlelement = new XMLCreator();
@@ -265,11 +284,11 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 				int projektdays = Integer.valueOf((String) daysProjectComboBox.getSelectedItem());
 				Double sconto = Double.parseDouble((String) scontoComboBox.getSelectedItem());
 				/*
-				 * Überprüfung, ob die XML-Datei der ausgewählten Stadt bereits existiert
+				 * Checking whether the XML file of the selected city already exists
 				 */				
 				if (xmlFile.exists()) {
 					/*
-					 * Überprüfung, ob Skonto ausgewählt wurde und Zuweisung des betreffenden Wertes
+					 * Check if discount was selected and allocation of that value
 					 */
 					if (scontoCheckBox.isSelected()) {
 						sconto = Double.parseDouble((String) scontoComboBox.getSelectedItem())/100 + 1;
@@ -312,7 +331,7 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		});
 		calculateButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
-		JButton resetButton = new JButton("Reset");
+		resetButton = new JButton("Reset");
 		resetButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				allInFeeTextField.setText("0.00");
@@ -331,7 +350,7 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		});
 		resetButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
-		final JButton closeButton = new JButton("Beenden");
+		closeButton = new JButton("Beenden");
 		closeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				Container frame = closeButton.getParent();
@@ -360,8 +379,14 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 		hoursPerDayTextField.setText(String.valueOf(workingHours));
 		hoursPerDayTextField.setColumns(10);
 		
-		JLabel hoursPerDayLabel = new JLabel("Stunden pro Tag");
+		hoursPerDayLabel = new JLabel("Stunden pro Tag");
 		hoursPerDayLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
+	}
+	
+	/**
+	 * Creates the GUI layout
+	 */
+	private LayoutManager createLayout() {
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -474,24 +499,22 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 						.addComponent(calculateButton))
 					.addContainerGap(8, Short.MAX_VALUE))
 		);
-		contentPane.setLayout(gl_contentPane);
+		return gl_contentPane;
 	}
+	
 
 	@Override
 	public void contentsChanged(ListDataEvent arg0) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void intervalAdded(ListDataEvent arg0) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void intervalRemoved(ListDataEvent arg0) {
 		// TODO Auto-generated method stub
-		
 	}
 }

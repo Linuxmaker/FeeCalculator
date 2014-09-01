@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.Color;
+import java.awt.LayoutManager;
 
 import javax.swing.JCheckBox;
 
@@ -49,21 +50,27 @@ public class AddFrame extends JFrame {
 	 */
 	private static final long serialVersionUID = 3383005760615272827L;
 	private JPanel contentPane;
-	public JTextField cityTextField;
-	private JLabel railTicketTwoLabel;
+	private JTextField cityTextField;
 	private JTextField railTicketTwoTextField;
-	private JLabel railTicketMonthLabel;
 	private JTextField railTicketMonthTextField;
-	private JLabel hotelCostsLabel;
 	private JTextField hotelCostsTextField;
 	private JLabel eur1Label;
 	private JLabel eur2Label;
 	private JLabel eur3Label;
+	private JLabel cityLabel;
 	private JLabel resultLabel;
+	private JLabel railTicketMonthLabel;
+	private JLabel railTicketTwoLabel;
+	private JLabel hotelCostsLabel;
 	private JCheckBox publicTransportCheckBox;
+	private JButton addButton;
+	private JButton clearButton;
+	private JButton closeButton;
+	private JButton searchButton;
 	private String originCity = new Settings().readSettings("pointOfDeparture");
 	private String drivingTime = new Settings().readSettings("drivingTime");
 	private String maxDistance = new Settings().readSettings("maxdistance");
+	private String distancePublicTransport = new Settings().readSettings("publicTransport");
 	private Compare cityCompare = new Compare();
 	/**
 	 * Launch the application.
@@ -100,15 +107,23 @@ public class AddFrame extends JFrame {
 		contentPane.setBackground(new Color(250, 250, 210));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
-		
-		final JLabel cityLabel = new JLabel("Projekt-Stadt");
+		publicTransportCheckBox.setEnabled(false);
+		initializeGuiObjects();
+		contentPane.setLayout(createLayout());
+	}
+	
+	/**
+	 * Initializes the GUI elements
+	 */
+	private void initializeGuiObjects(){
+		cityLabel = new JLabel("Projekt-Stadt");
 		cityLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		cityTextField = new JTextField();
 		cityTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		cityTextField.setColumns(10);
 		
-		JButton searchButton = new JButton("Suchen");
+		searchButton = new JButton("Suchen");
 		searchButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		searchButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -122,7 +137,9 @@ public class AddFrame extends JFrame {
 						if (search.parsedistance(originCity, cityTextField.getText()) <= Double.parseDouble(maxDistance)) {
 							railTicketMonthTextField.setEnabled(true);
 							railTicketTwoTextField.setEnabled(true);
-							publicTransportCheckBox.setEnabled(true);
+							if (search.parsedistance(originCity, cityTextField.getText()) <= Double.parseDouble(distancePublicTransport)) {
+								publicTransportCheckBox.setEnabled(true);
+							}							
 						} else {
 							railTicketMonthTextField.setEnabled(false);
 							railTicketTwoTextField.setEnabled(true);
@@ -174,7 +191,7 @@ public class AddFrame extends JFrame {
 		eur3Label = new JLabel("EUR");		
 		eur3Label.setFont(new Font("Dialog", Font.PLAIN, 12));
 
-		JButton addButton = new JButton("Hinzufügen");
+		addButton = new JButton("Hinzufügen");
 		addButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				XMLCreator writer = new XMLCreator();
@@ -196,7 +213,7 @@ public class AddFrame extends JFrame {
 		});
 		addButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
-		JButton clearButton = new JButton("Löschen");
+		clearButton = new JButton("Löschen");
 		clearButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				reset();
@@ -205,7 +222,7 @@ public class AddFrame extends JFrame {
 		});
 		clearButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
-		final JButton closeButton = new JButton("Beenden");
+		closeButton = new JButton("Beenden");
 		closeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e){
 				Container frame = closeButton.getParent();
@@ -224,7 +241,12 @@ public class AddFrame extends JFrame {
 		
 		publicTransportCheckBox = new JCheckBox("Liegt im ÖPNV");
 		publicTransportCheckBox.setFont(new Font("Dialog", Font.PLAIN, 12));
-		publicTransportCheckBox.setEnabled(false);
+	}
+	
+	/**
+	 * Creates the GUI layout
+	 */
+	private LayoutManager createLayout() {
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -298,7 +320,7 @@ public class AddFrame extends JFrame {
 						.addComponent(closeButton))
 					.addContainerGap())
 		);
-		contentPane.setLayout(gl_contentPane);
+		return gl_contentPane;
 	}
 
 	protected void reset() {

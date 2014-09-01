@@ -8,6 +8,7 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import java.awt.LayoutManager;
 import java.awt.Toolkit;
 import java.awt.Color;
 import java.awt.Font;
@@ -68,24 +69,49 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 	private Double workingHours = Double.parseDouble(new Settings().readSettings("workinghours"));
 	private Double maxDistance = Double.parseDouble(new Settings().readSettings("maxdistance"));
 	private Double drivingTime = Double.parseDouble(new Settings().readSettings("drivingTime"));
+	private Double fee;
 	private JPanel contentPane;
 	private JTextField originCityTextField;
 	private JTextField feeTextField;
+	private JTextField hoursPerDayTextField;
 	private JComboBox<String> targetCityComboBox;
+	private JComboBox<String> scontoComboBox;
+	private JComboBox<String> overnightStayComboBox;
+	private JComboBox<String> daysProjectComboBox;
 	private ComboBoxModel myComboBoxModel;
+	private JCheckBox scontoCheckBox;
+	private JCheckBox carCheckBox;
+	private JLabel cur1Label;
 	private JLabel cur2Label;
 	private JLabel cur3Label;
 	private JLabel dayPriceLabel;
 	private JLabel hourPriceLabel;
 	private JLabel hourHonorarLabel;
 	private JLabel dayHonorarLabel;
-	private JCheckBox scontoCheckBox;
-	private JComboBox<String> scontoComboBox;
-	private JComboBox<String> overnightStayComboBox;
-	private JTextField hoursPerDayTextField;
-	private final JComboBox<String> daysProjectComboBox;
-	private JCheckBox carCheckBox;
-	private Double fee;
+	private JLabel originCityLabel;
+	private JLabel targetCityLabel;
+	private JLabel feeLabel;
+	private JLabel daysProjectLabel;
+	private JLabel scontoLabel;
+	private JLabel overnightStayLabel;
+	private JLabel hoursPerDayLabel;
+	private JButton calculateButton;
+	private JButton endButton;
+	private JButton resetButton;
+	private JMenuBar menuBar;
+	private JMenuItem menuItemExit;
+	private JMenuItem menuItemChange;
+	private JMenuItem menuItemDelete;
+	private JMenuItem menuItemNetFer;
+	private JMenuItem menuItemCity;
+	private JMenuItem menuItemHelp;
+	private JMenuItem menuItemSettings;
+	private JMenuItem menuItemAbout;
+	private JMenu menuFile;
+	private JMenu menuEdit;
+	private JMenu menuExtra;
+	private JMenu menuInfo;
+	private JMenu menuSettings;
 	
 	/**
 	 * Launch the application.
@@ -125,17 +151,24 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 400);
 		setLocationRelativeTo(null);
-		
-		JMenuBar menuBar = new JMenuBar();
+		initializeGuiObjects();
+		contentPane.setLayout(createLayout());
+	}
+	
+	/**
+	 * Initializes the GUI elements
+	 */
+	private void initializeGuiObjects(){
+		menuBar = new JMenuBar();
 		menuBar.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuBar.setBackground(new Color(240, 230, 140));
 		setJMenuBar(menuBar);
 		
-		JMenu menuFile = new JMenu("Datei");
+		menuFile = new JMenu("Datei");
 		menuFile.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuBar.add(menuFile);
 		
-		JMenuItem menuItemExit = new JMenuItem("Beenden");
+		menuItemExit = new JMenuItem("Beenden");
 		menuItemExit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.exit(0);
@@ -144,7 +177,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		menuItemExit.setFont(new Font("Dialog", Font.PLAIN, 11));
 		menuFile.add(menuItemExit);
 		
-		JMenu menuEdit = new JMenu("Bearbeiten");
+		menuEdit = new JMenu("Bearbeiten");
 		menuEdit.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuBar.add(menuEdit);
 		
@@ -156,7 +189,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		});
 		menuEdit.add(menuItemAdd);
 		
-		JMenuItem menuItemChange = new JMenuItem("Ändern");
+		menuItemChange = new JMenuItem("Ändern");
 		menuItemChange.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				ChangeFrame.main(null);
@@ -165,7 +198,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		menuItemChange.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuEdit.add(menuItemChange);
 		
-		JMenuItem menuItemDelete = new JMenuItem("Löschen");
+		menuItemDelete = new JMenuItem("Löschen");
 		menuItemDelete.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				System.out.println("Löschen");
@@ -174,11 +207,11 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		menuItemDelete.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuEdit.add(menuItemDelete);
 		
-		JMenu menuExtra = new JMenu("Extras");
+		menuExtra = new JMenu("Extras");
 		menuExtra.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuBar.add(menuExtra);
 		
-		JMenuItem menuItemNetFer = new JMenuItem("Nettohonorar");
+		menuItemNetFer = new JMenuItem("Nettohonorar");
 		menuItemNetFer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				NetFeeFrame.main(null);
@@ -187,11 +220,11 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		menuItemNetFer.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuExtra.add(menuItemNetFer);
 		
-		JMenu menuSettings = new JMenu("Einstellungen");
+		menuSettings = new JMenu("Einstellungen");
 		menuSettings.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuBar.add(menuSettings);
 		
-		JMenuItem menuItemSettings = new JMenuItem("Einstellungen");
+		menuItemSettings = new JMenuItem("Einstellungen");
 		menuItemSettings.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				SettingsFrame settings = new SettingsFrame();
@@ -201,19 +234,19 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		menuItemSettings.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuSettings.add(menuItemSettings);
 		
-		JMenuItem menuItemCity = new JMenuItem("Standardstadt");
+		menuItemCity = new JMenuItem("Standardstadt");
 		menuItemCity.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuSettings.add(menuItemCity);
 		
-		JMenu menuInfo = new JMenu("Info");
+		menuInfo = new JMenu("Info");
 		menuInfo.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuBar.add(menuInfo);
 		
-		JMenuItem menuItemHelp = new JMenuItem("Hilfe");
+		menuItemHelp = new JMenuItem("Hilfe");
 		menuItemHelp.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuInfo.add(menuItemHelp);
 		
-		JMenuItem menuItemAbout = new JMenuItem("Über...");
+		menuItemAbout = new JMenuItem("Über...");
 		menuItemAbout.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuInfo.add(menuItemAbout);
 		contentPane = new JPanel();
@@ -221,7 +254,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		contentPane.setBorder(null);
 		setContentPane(contentPane);
 		
-		JLabel originCityLabel = new JLabel("Ausgangsstadt");
+		originCityLabel = new JLabel("Ausgangsstadt");
 		originCityLabel.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
 		
 		originCityTextField = new JTextField();
@@ -229,7 +262,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		originCityTextField.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
 		originCityTextField.setColumns(10);
 		
-		JLabel targetCityLabel = new JLabel("Projekteinsatz");
+		targetCityLabel = new JLabel("Projekteinsatz");
 		targetCityLabel.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
 
 		targetCityComboBox = new JComboBox<String>();
@@ -271,12 +304,12 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		});
 		
 		/*
-		 * ComboBoxModel erzeugen
+		 * Creates ComboBoxModel
 		 */
 		myComboBoxModel = new ComboBoxModel();
 
 		/*
-		 * ComboBoxModel setzen
+		 * Sets ComboBoxModel
 		 */
 		myComboBoxModel.reload();
 		targetCityComboBox.setModel(myComboBoxModel);
@@ -286,8 +319,8 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		targetCityComboBox.setEditable(false);
 		targetCityComboBox.setMaximumRowCount(10);
 		targetCityComboBox.setFont(new Font("Dialog", Font.PLAIN, 12));
-		JLabel feeLabel = new JLabel("Netto-Honorar");
-		feeLabel.setToolTipText("Keine Eingabe ermittelt die Reisekosten");
+		feeLabel = new JLabel("Netto-Honorar");
+		feeLabel.setToolTipText("0 oder 0,0 ermittelt die Reisekosten");
 		feeLabel.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
 		
 		feeTextField = new JTextField();
@@ -295,7 +328,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		feeTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
 		feeTextField.setColumns(10);
 		
-		JLabel daysProjectLabel = new JLabel("Projekttage Monat");
+		daysProjectLabel = new JLabel("Projekttage Monat");
 		daysProjectLabel.setToolTipText("Anzahl der tatsächlichen Projekttage bei Zeitfahrkarten");
 		daysProjectLabel.setFont(new Font("DejaVu Sans", Font.PLAIN, 12));
 		
@@ -324,7 +357,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		hourHonorarLabel.setHorizontalAlignment(JLabel.RIGHT);
 		hourHonorarLabel.setVisible(false);
 		
-		JButton calculateButton = new JButton("AllIn-Honorar");
+		calculateButton = new JButton("AllIn-Honorar");
 		calculateButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				XMLCreator xmlelement = new XMLCreator();
@@ -344,11 +377,11 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 				int projektdays = Integer.valueOf((String) daysProjectComboBox.getSelectedItem());
 				Double sconto = Double.parseDouble((String) scontoComboBox.getSelectedItem());
 				/*
-				 * Überprüfung, ob die XML-Datei der ausgewählten Stadt bereits existiert
+				 * Checking whether the XML file of the selected city already exists
 				 */
 				if (xmlFile.exists()) {
 					/*
-					 * Überprüfung, ob Skonto ausgewählt wurde und Zuweisung des betreffenden Wertes
+					 * Check if discount was selected and allocation of that value
 					 */
 					if (scontoCheckBox.isSelected()) {
 						sconto = Double.parseDouble((String) scontoComboBox.getSelectedItem())/100 + 1;
@@ -373,7 +406,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 							projektdays, 
 							overnightStay,
 							carCheckBox.isSelected())/hoursPerDay)));
-					if (feeTextField.getText().equals("0.00")) {
+					if (feeTextField.getText().equals("0") || feeTextField.getText().equals("0,0")) {
 						dayPriceLabel.setText("Reisekosten");
 						hourPriceLabel.setText("Reisekosten/h");
 					} else {
@@ -404,7 +437,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		});
 		calculateButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
-		JButton endButton = new JButton("Beenden");
+		endButton = new JButton("Beenden");
 		endButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		endButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -420,7 +453,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		cur3Label.setVisible(false);
 		cur3Label.setFont(new Font("Dialog", Font.BOLD, 12));
 		
-		JLabel scontoLabel = new JLabel("% Skonto");
+		scontoLabel = new JLabel("% Skonto");
 		scontoLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		scontoComboBox = new JComboBox<String>();
@@ -432,7 +465,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		scontoCheckBox.setSelected(false);
 		scontoCheckBox.setFont(new Font("Dialog", Font.PLAIN, 12));
 
-		JLabel overnightStayLabel = new JLabel("Übernachtungen");
+		overnightStayLabel = new JLabel("Übernachtungen");
 		overnightStayLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
 		overnightStayComboBox = new JComboBox<String>();
@@ -440,10 +473,10 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		overnightStayComboBox.setSelectedIndex(0);
 		overnightStayComboBox.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
-		JLabel cur1Label = new JLabel("EUR");
+		cur1Label = new JLabel("EUR");
 		cur1Label.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
-		JButton resetButton = new JButton("Reset");
+		resetButton = new JButton("Reset");
 		resetButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				feeTextField.setText("0.00");
@@ -462,7 +495,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		});
 		resetButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
-		JLabel hoursPerDayLabel = new JLabel("Stunden pro Tag");
+		hoursPerDayLabel = new JLabel("Stunden pro Tag");
 		hoursPerDayLabel.setToolTipText("Änderungsmöglichkeit bei Abweichungen bei der Regelarbeitszeit");
 		hoursPerDayLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
@@ -484,7 +517,12 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 			}
 		});
 		carCheckBox.setFont(new Font("Dialog", Font.PLAIN, 12));
-		
+	}
+	
+	/**
+	 * Creates the GUI layout
+	 */
+	private LayoutManager createLayout() {
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.TRAILING)
@@ -612,7 +650,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 						.addComponent(endButton))
 					.addContainerGap(9, Short.MAX_VALUE))
 		);
-		contentPane.setLayout(gl_contentPane);
+		return gl_contentPane;
 	}
 
 	@Override
