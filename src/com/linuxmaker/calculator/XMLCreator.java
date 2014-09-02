@@ -36,6 +36,7 @@ import org.xml.sax.SAXException;
  * @author Andreas Günther, IT-LINUXMAKER
  *
  */
+@SuppressWarnings("deprecation")
 public class XMLCreator {
 	private String folder = new Settings().readSettings("directory");
 	private String path = System.getProperties().getProperty("user.home")+File.separator+folder+File.separator+new Settings().readSettings("pointOfDeparture")+"City.xml";
@@ -49,7 +50,6 @@ public class XMLCreator {
 	String cityName;
 	String ticket = "0.0";
 	String hotel = "0.0";
-	String flightcost = "0.0";
 	String publictransport;
 
 	public XMLCreator() {
@@ -93,7 +93,7 @@ public class XMLCreator {
 		
 	}
 	
-	@SuppressWarnings({ "unchecked", "deprecation" })
+	@SuppressWarnings({ "unchecked" })
 	public List<String> readXML(String cityName) {
 		List<String> results  = new ArrayList<String>();
 		Document doc;
@@ -121,8 +121,7 @@ public class XMLCreator {
 		return results;				
 	}
 
-	@SuppressWarnings({ "deprecation", "unchecked" })
-	public void changeXML(String cityName, String varMonthlyTicket, String varRoundTripTicket, String varHotel) {
+	public void changeXML(String cityName, String varMonthlyTicket, String varRoundTripTicket, String varHotel, String varPublictransport) {
 		try {
 			SAXBuilder builder = new SAXBuilder();
 			Document doc = (Document) builder.build(xmlFile);
@@ -145,8 +144,10 @@ public class XMLCreator {
 					hotelCost.addContent(varHotel);
 					city.removeChild(ELEMENT_HOTEL);
 					city.addContent(hotelCost);
+					Element publicTransport = new Element(ELEMENT_PUBLICTRANSPORT);
+					publicTransport.addContent(varPublictransport);
 					city.removeChild(ELEMENT_PUBLICTRANSPORT);
-					city.addContent(publictransport);
+					city.addContent(publicTransport);
 				}
 				
 			}
@@ -159,6 +160,26 @@ public class XMLCreator {
 			e.printStackTrace();
 		}
 		
+	}
+	
+	public void removeElement(String cityName) {
+		try {
+			SAXBuilder builder = new SAXBuilder();
+			Document doc = (Document) builder.build(xmlFile);
+			Element costCalculator = doc.getRootElement();
+			Iterator<Element> cities = costCalculator.getChildren("city").iterator();
+			while (cities.hasNext()) {
+				Element city = (Element) cities.next();
+				if (cityName.equals(city.getAttribute("name").getValue())) {
+					cities.remove();
+				}	
+			}			
+			XMLOutputter xmlOutput = new XMLOutputter();
+			xmlOutput.setFormat(Format.getPrettyFormat());
+			xmlOutput.output(doc, new FileWriter(xmlFile));			
+		} catch (JDOMException | IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@SuppressWarnings({ "deprecation", "unchecked" })
