@@ -15,6 +15,7 @@ import javax.swing.GroupLayout.Alignment;
 import java.awt.Toolkit;
 
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JButton;
@@ -107,7 +108,6 @@ public class AddFrame extends JFrame {
 		contentPane.setBackground(new Color(250, 250, 210));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
-		publicTransportCheckBox.setEnabled(false);
 		initializeGuiObjects();
 		contentPane.setLayout(createLayout());
 	}
@@ -152,7 +152,6 @@ public class AddFrame extends JFrame {
 							publicTransportCheckBox.setEnabled(false);
 						}
 					} catch (XPathExpressionException | SAXException | IOException | ParserConfigurationException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 				}
@@ -196,19 +195,31 @@ public class AddFrame extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				XMLCreator writer = new XMLCreator();
 				try {
-					writer.writeXML(
-							cityTextField.getText(), 
-							railTicketMonthTextField.getText().replace(',', '.'), 
-							railTicketTwoTextField.getText().replace(',', '.'), 
-							hotelCostsTextField.getText().replace(',', '.'), 
-							String.valueOf(publicTransportCheckBox.isSelected()));
-					resultLabel.setVisible(true);
+					if (railTicketTwoTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
+						if (railTicketMonthTextField.isEnabled() && railTicketMonthTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
+							if (hotelCostsTextField.isEnabled() && hotelCostsTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
+								writer.writeXML(
+										cityTextField.getText(), 
+										railTicketTwoTextField.getText().replace(',', '.'),
+										railTicketMonthTextField.getText().replace(',', '.'),  
+										hotelCostsTextField.getText().replace(',', '.'), 
+										String.valueOf(publicTransportCheckBox.isSelected()));
+								resultLabel.setVisible(true);
+								reset();
+							} else {
+								JOptionPane.showMessageDialog(null, "Es sind unter \"Hotelkosten\" nur Zahlenwerte erlaubt!");
+							}
+						} else {
+							JOptionPane.showMessageDialog(null, "Es sind unter \"Monatsfahrkarte\" nur Zahlenwerte erlaubt!");
+						}
+					} else {
+						JOptionPane.showMessageDialog(null, "Es sind unter \"Bahnticket\" nur Zahlenwerte erlaubt!");
+						railTicketTwoTextField.setFocusable(true);
+					}
 				} catch (XPathExpressionException | SAXException
 						| ParserConfigurationException | JDOMException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				reset();
 			}
 		});
 		addButton.setFont(new Font("Dialog", Font.BOLD, 12));
@@ -241,6 +252,7 @@ public class AddFrame extends JFrame {
 		
 		publicTransportCheckBox = new JCheckBox("Liegt im ÖPNV");
 		publicTransportCheckBox.setFont(new Font("Dialog", Font.PLAIN, 12));
+		publicTransportCheckBox.setEnabled(false);
 	}
 	
 	/**
@@ -328,5 +340,6 @@ public class AddFrame extends JFrame {
 		railTicketTwoTextField.setEnabled(false);
 		railTicketMonthTextField.setEnabled(false);
 		hotelCostsTextField.setEnabled(false);
+		publicTransportCheckBox.setEnabled(false);
 	}
 }
