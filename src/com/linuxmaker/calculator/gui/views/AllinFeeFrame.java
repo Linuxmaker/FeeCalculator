@@ -101,7 +101,6 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 	private JMenuBar menuBar;
 	private JMenuItem menuItemExit;
 	private JMenuItem menuItemChange;
-	private JMenuItem menuItemDelete;
 	private JMenuItem menuItemNetFer;
 	private JMenuItem menuItemCity;
 	private JMenuItem menuItemHelp;
@@ -198,14 +197,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		menuItemChange.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuEdit.add(menuItemChange);
 		
-		menuItemDelete = new JMenuItem("Löschen");
-		menuItemDelete.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				System.out.println("Löschen");
-			}
-		});
-		menuItemDelete.setFont(new Font("Dialog", Font.PLAIN, 12));
-		menuEdit.add(menuItemDelete);
+		element = new XMLCreator();
 		
 		menuExtra = new JMenu("Extras");
 		menuExtra.setFont(new Font("Dialog", Font.PLAIN, 12));
