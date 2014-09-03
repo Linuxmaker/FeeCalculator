@@ -24,6 +24,7 @@ import java.awt.Font;
 
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 
@@ -59,7 +60,6 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 	private JComboBox<String> targetCityComboBox;
 	private ComboBoxModel myComboBoxModel;
 	private JCheckBox publicTransportCheckBox;
-	private JLabel publicTransportValueLabel;
 	private XMLCreator element;
 	private JLabel cur1Label;
 	private JLabel cur2Label;
@@ -107,16 +107,7 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		initializeGuiObjects();
-		contentPane.setLayout(createLayout(CityLabel, 
-										   RailTicketNormalLabel, 
-										   RailTicketMonthLabel,
-										   HotelCostLabel,
-										   cur1Label,
-										   cur2Label,
-										   cur3Label,
-										   ChangeButton,
-										   DeleteButton,
-										   closeButton));
+		contentPane.setLayout(createLayout());
 	}
 	
 	/**
@@ -134,7 +125,11 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 					RailTicketMonthFTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(3).replace('.', ','));
 					RailTicketNormalTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(4).replace('.', ','));
 					HotelCostTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(5).replace('.', ','));
-					publicTransportValueLabel.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(6));
+					if (element.readXML((String) targetCityComboBox.getSelectedItem()).get(6).equals("true")) {
+						publicTransportCheckBox.setSelected(true);
+					} else {
+						publicTransportCheckBox.setSelected(false);
+					}
 				}
 			}
 		});
@@ -178,12 +173,7 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 		HotelCostTextField.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(5).replace('.', ','));
 		
 		publicTransportCheckBox = new JCheckBox("Liegt im ÖPNV");
-		publicTransportCheckBox.setSelected(false);
 		publicTransportCheckBox.setFont(new Font("Dialog", Font.PLAIN, 11));
-		
-		publicTransportValueLabel = new JLabel();
-		publicTransportValueLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
-		publicTransportValueLabel.setText((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(6));
 		
 		cur1Label = new JLabel("EUR");
 		cur1Label.setFont(new Font("Dialog", Font.PLAIN, 11));
@@ -198,13 +188,19 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 		ChangeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				XMLCreator change = new XMLCreator();
-				change.changeXML(
-						(String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(0), 
-						RailTicketMonthFTextField.getText().replace(',', '.'), 
-						RailTicketNormalTextField.getText().replace(',', '.'), 
-						HotelCostTextField.getText().replace(',', '.'),
-						String.valueOf(publicTransportCheckBox.isSelected())
-						);
+				if (RailTicketMonthFTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?") && 
+					RailTicketNormalTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?") && 
+					HotelCostTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
+					change.changeXML(
+							(String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(0), 
+							RailTicketMonthFTextField.getText().replace(',', '.'), 
+							RailTicketNormalTextField.getText().replace(',', '.'), 
+							HotelCostTextField.getText().replace(',', '.'),
+							String.valueOf(publicTransportCheckBox.isSelected())
+							);
+				} else {
+					JOptionPane.showMessageDialog(null, "Es sind nur Zahlenwerte erlaubt!");
+				}
 			}
 
 		});
@@ -213,8 +209,18 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 		DeleteButton = new JButton("Löschen");
 		DeleteButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				XMLCreator delete = new XMLCreator();
-				delete.removeElement((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(0));
+				Object[] eventCache = null;
+				Object anchor = null;
+				int optionPane = JOptionPane.showConfirmDialog(null,
+						"Mit dem Löschen gehen alle Daten zu dieser Stadt verloren!\n"
+						+ "Möchten Sie diese Stadt tatsächlich löschen?",
+						"Löschen von Einträgen",
+						JOptionPane.YES_NO_OPTION);
+				if (optionPane == JOptionPane.YES_OPTION) {
+					XMLCreator delete = new XMLCreator();
+					delete.removeElement((String) element.readXML((String) targetCityComboBox.getSelectedItem()).get(0));
+				}
+				
 			}
 		});
 		DeleteButton.setToolTipText("Löschen des Eintrages");
@@ -240,14 +246,7 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 	/**
 	 * Creates the GUI layout
 	 */
-	private LayoutManager createLayout(JLabel CityLabel,
-									   JLabel RailTicketNormalLabel,
-									   JLabel RailTicketMonthLabel,
-									   JLabel HotelCostLabel,JLabel cur1Label,
-									   JLabel cur2Label,
-									   JLabel cur3Label,JButton ChangeButton,
-									   JButton DeleteButton,
-									   JButton closeButton) {
+	private LayoutManager createLayout() {
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -278,10 +277,7 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 							.addComponent(DeleteButton)
 							.addPreferredGap(ComponentPlacement.RELATED)
 							.addComponent(closeButton))
-						.addGroup(gl_contentPane.createSequentialGroup()
-							.addComponent(publicTransportCheckBox)
-							.addGap(18)
-							.addComponent(publicTransportValueLabel)))
+						.addComponent(publicTransportCheckBox))
 					.addGap(107))
 		);
 		gl_contentPane.setVerticalGroup(
@@ -309,9 +305,7 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 								.addComponent(cur3Label)
 								.addComponent(HotelCostLabel))))
 					.addGap(8)
-					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-						.addComponent(publicTransportCheckBox)
-						.addComponent(publicTransportValueLabel))
+					.addComponent(publicTransportCheckBox)
 					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(ChangeButton)

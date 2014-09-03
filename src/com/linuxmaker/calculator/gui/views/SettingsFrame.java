@@ -110,26 +110,7 @@ public class SettingsFrame extends JFrame {
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		initializeGuiObjects();
-		contentPane.setLayout(createLayout(defaultCityLabel,
-										   workingHoursLabel,
-										   minDayFeeLabel,
-										   consumptionLabel,
-										   fuelConsumptionLabel,
-										   maxDistanceLabel,
-										   unit1Label,
-										   unit2Label,
-										   unit3Label,
-										   unit4Label,
-										   unit5Label,
-										   unit6Label,
-										   unit7Label,
-										   unit8Label,
-										   fuelCostLabel,
-										   drivingTimeLabel,
-										   publicTransportLabel,
-										   folderLabel,
-										   okayButton,
-										   closeButton));
+		contentPane.setLayout(createLayout());
 	}
 
 	/**
@@ -386,26 +367,7 @@ public class SettingsFrame extends JFrame {
 	/**
 	 * Creates the GUI layout
 	 */
-	private LayoutManager createLayout(JLabel defaultCityLabel, 
-									   JLabel workingHoursLabel, 
-									   JLabel minDayFeeLabel, 
-									   JLabel consumptionLabel, 
-									   JLabel fuelConsumptionLabel, 
-									   JLabel maxDistanceLabel,
-									   JLabel unit1Label,
-									   JLabel unit2Label,
-									   JLabel unit3Label,
-									   JLabel unit4Label,
-									   JLabel unit5Label,
-									   JLabel unit6Label,
-									   JLabel unit7Label,
-									   JLabel unit8Label,
-									   JLabel fuelCostLabel,
-									   JLabel drivingTimeLabel,
-									   JLabel publicTransportLabel,
-									   JLabel folderLabel,
-									   JButton okayButton,
-									   JButton closeButton) {
+	private LayoutManager createLayout() {
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
