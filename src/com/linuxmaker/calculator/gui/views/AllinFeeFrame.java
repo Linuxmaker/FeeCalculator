@@ -32,6 +32,7 @@ import org.xml.sax.SAXException;
 
 import com.linuxmaker.calculator.ComboBoxModel;
 import com.linuxmaker.calculator.Fee;
+import com.linuxmaker.calculator.JAbout;
 import com.linuxmaker.calculator.Settings;
 import com.linuxmaker.calculator.XMLCreator;
 import com.linuxmaker.calculator.XmlFileWriter;
@@ -197,8 +198,6 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		menuItemChange.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuEdit.add(menuItemChange);
 		
-		element = new XMLCreator();
-		
 		menuExtra = new JMenu("Extras");
 		menuExtra.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuBar.add(menuExtra);
@@ -239,6 +238,12 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		menuInfo.add(menuItemHelp);
 		
 		menuItemAbout = new JMenuItem("Über...");
+		menuItemAbout.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				AboutFrame about = new AboutFrame();
+				about.main(null);
+			}
+		});
 		menuItemAbout.setFont(new Font("Dialog", Font.PLAIN, 12));
 		menuInfo.add(menuItemAbout);
 		contentPane = new JPanel();
@@ -516,6 +521,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 	 */
 	private LayoutManager createLayout() {
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
+		gl_contentPane.setAutoCreateGaps(true);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.TRAILING)
 				.addGroup(gl_contentPane.createSequentialGroup()

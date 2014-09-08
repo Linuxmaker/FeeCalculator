@@ -388,6 +388,7 @@ public class NetFeeFrame extends JFrame implements ListDataListener {
 	 */
 	private LayoutManager createLayout() {
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
+		gl_contentPane.setAutoCreateGaps(true);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_contentPane.createSequentialGroup()

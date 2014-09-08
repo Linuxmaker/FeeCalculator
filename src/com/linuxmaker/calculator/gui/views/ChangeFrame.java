@@ -209,8 +209,6 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 		DeleteButton = new JButton("Löschen");
 		DeleteButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				Object[] eventCache = null;
-				Object anchor = null;
 				int optionPane = JOptionPane.showConfirmDialog(null,
 						"Mit dem Löschen gehen alle Daten zu dieser Stadt verloren!\n"
 						+ "Möchten Sie diese Stadt tatsächlich löschen?",
@@ -248,6 +246,7 @@ public class ChangeFrame extends JFrame implements ListDataListener, ActionListe
 	 */
 	private LayoutManager createLayout() {
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
+		gl_contentPane.setAutoCreateGaps(true);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_contentPane.createSequentialGroup()
