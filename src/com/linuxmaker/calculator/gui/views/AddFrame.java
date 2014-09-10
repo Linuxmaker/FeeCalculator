@@ -52,16 +52,16 @@ public class AddFrame extends JFrame {
 	private static final long serialVersionUID = 3383005760615272827L;
 	private JPanel contentPane;
 	private JTextField cityTextField;
-	private JTextField railTicketTwoTextField;
-	private JTextField railTicketMonthTextField;
+	private JTextField singleTrainTicketTextField;
+	private JTextField monthlyTrainTicketTextField;
 	private JTextField hotelCostsTextField;
 	private JLabel eur1Label;
 	private JLabel eur2Label;
 	private JLabel eur3Label;
 	private JLabel cityLabel;
 	private JLabel resultLabel;
-	private JLabel railTicketMonthLabel;
-	private JLabel railTicketTwoLabel;
+	private JLabel monthlyTrainTicketLabel;
+	private JLabel singleTrainTicketLabel;
 	private JLabel hotelCostsLabel;
 	private JCheckBox publicTransportCheckBox;
 	private JButton addButton;
@@ -135,18 +135,20 @@ public class AddFrame extends JFrame {
 					Parser search = new Parser();
 					try {
 						if (search.parsedistance(originCity, cityTextField.getText()) <= Double.parseDouble(maxDistance)) {
-							railTicketMonthTextField.setEnabled(true);
-							railTicketTwoTextField.setEnabled(true);
+							monthlyTrainTicketTextField.setEnabled(true);
+							singleTrainTicketTextField.setEnabled(true);
 							if (search.parsedistance(originCity, cityTextField.getText()) <= Double.parseDouble(distancePublicTransport)) {
 								publicTransportCheckBox.setEnabled(true);
 							}							
 						} else {
-							railTicketMonthTextField.setEnabled(false);
-							railTicketTwoTextField.setEnabled(true);
+							monthlyTrainTicketTextField.setEnabled(false);
+							monthlyTrainTicketTextField.setText("0.00");
+							singleTrainTicketTextField.setEnabled(true);
 							publicTransportCheckBox.setEnabled(false);
 						}
 						if (search.parseduration(originCity, cityTextField.getText()) <= Double.parseDouble(drivingTime)) {
 							hotelCostsTextField.setEnabled(false);
+							hotelCostsTextField.setText("0.00");
 						} else {
 							hotelCostsTextField.setEnabled(true);
 							publicTransportCheckBox.setEnabled(false);
@@ -158,22 +160,22 @@ public class AddFrame extends JFrame {
 			}
 		});
 		
-		railTicketTwoLabel = new JLabel("Bahnticket");
-		railTicketTwoLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
+		singleTrainTicketLabel = new JLabel("Bahnticket");
+		singleTrainTicketLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
-		railTicketTwoTextField = new JTextField();
-		railTicketTwoTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
-		railTicketTwoTextField.setEnabled(false);
-		railTicketTwoTextField.setToolTipText("Betrag für die Hin- und Rückfahrt der DB AG");
-		railTicketTwoTextField.setColumns(10);
+		singleTrainTicketTextField = new JTextField();
+		singleTrainTicketTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
+		singleTrainTicketTextField.setEnabled(false);
+		singleTrainTicketTextField.setToolTipText("Betrag für die Hin- und Rückfahrt der DB AG");
+		singleTrainTicketTextField.setColumns(10);
 		
-		railTicketMonthLabel = new JLabel("Monatsfahrkarte");
-		railTicketMonthLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
+		monthlyTrainTicketLabel = new JLabel("Monatsfahrkarte");
+		monthlyTrainTicketLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 		
-		railTicketMonthTextField = new JTextField();
-		railTicketMonthTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
-		railTicketMonthTextField.setEnabled(false);
-		railTicketMonthTextField.setColumns(10);
+		monthlyTrainTicketTextField = new JTextField();
+		monthlyTrainTicketTextField.setFont(new Font("Dialog", Font.PLAIN, 12));
+		monthlyTrainTicketTextField.setEnabled(false);
+		monthlyTrainTicketTextField.setColumns(10);
 		
 		hotelCostsLabel = new JLabel("Hotelkosten");
 		hotelCostsLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
@@ -193,32 +195,26 @@ public class AddFrame extends JFrame {
 		addButton = new JButton("Hinzufügen");
 		addButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				XMLCreator writer = new XMLCreator();
-				try {
-					if (railTicketTwoTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
-						if (railTicketMonthTextField.isEnabled() && railTicketMonthTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
-							if (hotelCostsTextField.isEnabled() && hotelCostsTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
-								writer.writeXML(
-										cityTextField.getText(), 
-										railTicketTwoTextField.getText().replace(',', '.'),
-										railTicketMonthTextField.getText().replace(',', '.'),  
-										hotelCostsTextField.getText().replace(',', '.'), 
-										String.valueOf(publicTransportCheckBox.isSelected()));
-								resultLabel.setVisible(true);
-								reset();
-							} else {
-								JOptionPane.showMessageDialog(null, "Es sind unter \"Hotelkosten\" nur Zahlenwerte erlaubt!");
+				if (singleTrainTicketTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
+					if (monthlyTrainTicketTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
+						System.out.println("Monatsticket ist aktiviert");
+						if (hotelCostsTextField.isEnabled() && hotelCostsTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
+							try {
+								writeData();
+							} catch (XPathExpressionException | SAXException
+									| ParserConfigurationException
+									| JDOMException e) {
+								e.printStackTrace();
 							}
 						} else {
-							JOptionPane.showMessageDialog(null, "Es sind unter \"Monatsfahrkarte\" nur Zahlenwerte erlaubt!");
+							JOptionPane.showMessageDialog(null, "Es sind unter \"Hotelkosten\" nur Zahlenwerte erlaubt!");
 						}
 					} else {
-						JOptionPane.showMessageDialog(null, "Es sind unter \"Bahnticket\" nur Zahlenwerte erlaubt!");
-						railTicketTwoTextField.setFocusable(true);
+						JOptionPane.showMessageDialog(null, "Es sind unter \"Monatsfahrkarte\" nur Zahlenwerte erlaubt!");
 					}
-				} catch (XPathExpressionException | SAXException
-						| ParserConfigurationException | JDOMException e) {
-					e.printStackTrace();
+				} else {
+					JOptionPane.showMessageDialog(null, "Es sind unter \"Bahnticket\" nur Zahlenwerte erlaubt!");
+					singleTrainTicketTextField.setFocusable(true);
 				}
 			}
 		});
@@ -268,8 +264,8 @@ public class AddFrame extends JFrame {
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 						.addGroup(gl_contentPane.createSequentialGroup()
 							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-								.addComponent(railTicketTwoLabel)
-								.addComponent(railTicketMonthLabel)
+								.addComponent(singleTrainTicketLabel)
+								.addComponent(monthlyTrainTicketLabel)
 								.addComponent(hotelCostsLabel)
 								.addComponent(cityLabel)
 								.addComponent(resultLabel))
@@ -278,8 +274,8 @@ public class AddFrame extends JFrame {
 								.addGroup(gl_contentPane.createSequentialGroup()
 									.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING, false)
 										.addComponent(hotelCostsTextField, Alignment.LEADING, 0, 0, Short.MAX_VALUE)
-										.addComponent(railTicketMonthTextField, Alignment.LEADING, 0, 0, Short.MAX_VALUE)
-										.addComponent(railTicketTwoTextField, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 98, Short.MAX_VALUE))
+										.addComponent(monthlyTrainTicketTextField, Alignment.LEADING, 0, 0, Short.MAX_VALUE)
+										.addComponent(singleTrainTicketTextField, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 98, Short.MAX_VALUE))
 									.addPreferredGap(ComponentPlacement.RELATED)
 									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 										.addComponent(eur3Label)
@@ -310,15 +306,15 @@ public class AddFrame extends JFrame {
 						.addComponent(resultLabel))
 					.addGap(12)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-						.addComponent(railTicketTwoTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(singleTrainTicketTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 						.addComponent(eur1Label)
-						.addComponent(railTicketTwoLabel))
+						.addComponent(singleTrainTicketLabel))
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 						.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-							.addComponent(railTicketMonthTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+							.addComponent(monthlyTrainTicketTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 							.addComponent(eur2Label))
-						.addComponent(railTicketMonthLabel))
+						.addComponent(monthlyTrainTicketLabel))
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(hotelCostsTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
@@ -335,11 +331,23 @@ public class AddFrame extends JFrame {
 		);
 		return gl_contentPane;
 	}
+	
+	protected void writeData() throws XPathExpressionException, SAXException, ParserConfigurationException, JDOMException {
+		XMLCreator writer = new XMLCreator();
+		writer.writeXML(
+				cityTextField.getText(), 
+				singleTrainTicketTextField.getText().replace(',', '.'),
+				monthlyTrainTicketTextField.getText().replace(',', '.'),  
+				hotelCostsTextField.getText().replace(',', '.'), 
+				String.valueOf(publicTransportCheckBox.isSelected()));
+		resultLabel.setVisible(true);
+		reset();
+	}
 
 	protected void reset() {
 		cityTextField.setText("");
-		railTicketTwoTextField.setEnabled(false);
-		railTicketMonthTextField.setEnabled(false);
+		singleTrainTicketTextField.setEnabled(false);
+		monthlyTrainTicketTextField.setEnabled(false);
 		hotelCostsTextField.setEnabled(false);
 		publicTransportCheckBox.setEnabled(false);
 	}
