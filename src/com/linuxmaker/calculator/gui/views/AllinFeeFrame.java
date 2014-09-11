@@ -240,7 +240,7 @@ public class AllinFeeFrame extends JFrame implements ListDataListener {
 		menuItemAbout = new JMenuItem("Über...");
 		menuItemAbout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				AboutFrame about = new AboutFrame();
+				AboutFrame about = new AboutFrame(null);
 				about.main(null);
 			}
 		});
