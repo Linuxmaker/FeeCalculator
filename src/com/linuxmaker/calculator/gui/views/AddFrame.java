@@ -65,7 +65,6 @@ public class AddFrame extends JFrame {
 	private JLabel hotelCostsLabel;
 	private JCheckBox publicTransportCheckBox;
 	private JButton addButton;
-	private JButton clearButton;
 	private JButton closeButton;
 	private JButton searchButton;
 	private String originCity = new Settings().readSettings("pointOfDeparture");
@@ -128,9 +127,7 @@ public class AddFrame extends JFrame {
 		searchButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (cityCompare.compare(cityTextField.getText())) {
-					resultLabel.setText("Die Stadt existiert bereits!");
-					resultLabel.setFont(new Font("Dialog", Font.BOLD, 9));
-					resultLabel.setVisible(true);
+					JOptionPane.showMessageDialog(null, "Die Stadt existiert bereits!");
 				} else {
 					Parser search = new Parser();
 					try {
@@ -197,7 +194,6 @@ public class AddFrame extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				if (singleTrainTicketTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
 					if (monthlyTrainTicketTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
-						System.out.println("Monatsticket ist aktiviert");
 						if (hotelCostsTextField.isEnabled() && hotelCostsTextField.getText().replace(',', '.').matches("\\d+([.]{1}\\d+)?")) {
 							try {
 								writeData();
@@ -219,15 +215,6 @@ public class AddFrame extends JFrame {
 			}
 		});
 		addButton.setFont(new Font("Dialog", Font.BOLD, 12));
-		
-		clearButton = new JButton("Löschen");
-		clearButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				reset();
-				resultLabel.setVisible(false);
-			}
-		});
-		clearButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		
 		closeButton = new JButton("Beenden");
 		closeButton.addActionListener(new ActionListener() {
@@ -256,7 +243,6 @@ public class AddFrame extends JFrame {
 	 */
 	private LayoutManager createLayout() {
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
-		gl_contentPane.setAutoCreateGaps(true);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_contentPane.createSequentialGroup()
@@ -287,9 +273,7 @@ public class AddFrame extends JFrame {
 								.addComponent(publicTransportCheckBox)))
 						.addGroup(gl_contentPane.createSequentialGroup()
 							.addComponent(addButton)
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(clearButton)
-							.addPreferredGap(ComponentPlacement.UNRELATED)
+							.addGap(111)
 							.addComponent(closeButton)))
 					.addContainerGap(14, Short.MAX_VALUE))
 		);
@@ -325,10 +309,10 @@ public class AddFrame extends JFrame {
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 						.addComponent(addButton)
-						.addComponent(clearButton)
 						.addComponent(closeButton))
 					.addContainerGap())
 		);
+		gl_contentPane.setAutoCreateGaps(true);
 		return gl_contentPane;
 	}
 	
