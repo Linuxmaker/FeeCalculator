@@ -18,6 +18,7 @@ public class Constants {
 	public final static String ELEMENT_HOTEL = "hotelcosts";
 	public final static String ELEMENT_PUBLICTRANSPORT = "publictransport";
 	public final static String ORIGIN_CITY = "Stuttgart";
+	public final static String DIRECTORY = "FeeCalcutor";
 	public final static double WORKINGDAY = 8.00;
 	private Constants() {
 	}
