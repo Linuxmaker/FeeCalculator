@@ -11,6 +11,7 @@ import static com.linuxmaker.calculator.Constants.ELEMENT_HOTEL;
 import static com.linuxmaker.calculator.Constants.ELEMENT_TICKET;
 import static com.linuxmaker.calculator.Constants.ELEMENT_DTICKET;
 import static com.linuxmaker.calculator.Constants.ELEMENT_PUBLICTRANSPORT;
+import static com.linuxmaker.calculator.Constants.DIRECTORY;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -38,8 +39,15 @@ import org.xml.sax.SAXException;
  */
 @SuppressWarnings("deprecation")
 public class XMLCreator {
-	private String folder = new Settings().readSettings("directory");
-	private String path = System.getProperties().getProperty("user.home")+File.separator+folder+File.separator+new Settings().readSettings("pointOfDeparture")+"City.xml";
+
+	
+	if (System.getProperty("os.name").indexOf("Windows") != -1) {
+		directory = DIRECTORY;
+	} else {
+		directory = "."+DIRECTORY;
+	}
+	private String directory;
+	private String path = System.getProperties().getProperty("user.home")+File.separator+directory+File.separator+new Settings().readSettings("pointOfDeparture")+"City.xml";
 	/*
 	 * Abfrage, ob xml-Datei bereits existiert!!!
 	 */
