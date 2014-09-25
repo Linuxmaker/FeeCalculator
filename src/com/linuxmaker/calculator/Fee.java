@@ -18,8 +18,6 @@ public class Fee {
 	private Double workingHours = Double.parseDouble(new Settings().readSettings("workinghours"));
 	private Double railBonus = Double.parseDouble(new Settings().readSettings("railCard"));
 	private Double consumption = Double.parseDouble(new Settings().readSettings("consumption"));
-	private Double fuelConsumption = Double.parseDouble(new Settings().readSettings("fuelConsumption"));
-	private Double fuelprice = Double.parseDouble(new Settings().readSettings("fuelprice"));
 	
 	/*
 	 * Main method, used by the graphical user interface
@@ -43,15 +41,15 @@ public class Fee {
 		if (drive) {
 			if (overnightStay == 0) { // Tägliches Pendeln
 				if (fee < minFee) { // Stundensatz
-						account = (fee*hoursPerDay + (consumption/100 + fuelConsumption/100 * fuelprice) * distance * 2) * sconto;
+						account = (fee*hoursPerDay + consumption * distance * 2) * sconto;
 				} else { // Tagessatz
-						account = (fee*factorWorkingHours(workingHours, hoursPerDay) + (consumption/100 + fuelConsumption/100 * fuelprice) * distance * 2) * sconto;
+						account = (fee*factorWorkingHours(workingHours, hoursPerDay) + consumption * distance * 2) * sconto;
 				}
 			} else { // Wöchentliches Pendeln
 				if (fee < minFee) { // Stundensatz
-					account = (fee*hoursPerDay + (consumption/100 + fuelConsumption/100 * fuelprice) * distance * 2 + overnightStay * hotelCosts) * sconto;
+					account = (fee*hoursPerDay + consumption * distance * 2 + overnightStay * hotelCosts) * sconto;
 				} else { // Tagessatz
-					account = (fee*factorWorkingHours(workingHours, hoursPerDay) + (consumption/100 + fuelConsumption/100 * fuelprice) * distance * 2 + overnightStay * hotelCosts) * sconto;
+					account = (fee*factorWorkingHours(workingHours, hoursPerDay) + consumption * distance * 2 + overnightStay * hotelCosts) * sconto;
 				}
 			}
 		} else {
@@ -62,7 +60,7 @@ public class Fee {
 							account = calculateFee(fee*hoursPerDay, monthlyTicket, sconto, projektdays);
 						} else { // Verwendung des Normaltickets(4)
 							account = calculateFee(fee*hoursPerDay, roundTripTicket, sconto, railBonus);
-						}	
+						}							
 					} else { // Tagessatz
 						if (roundTripTicket > monthlyTicket/projektdays || publictransport) { // Verwendung des Monatstickets(3)
 							account = calculateFee(fee*factorWorkingHours(workingHours, hoursPerDay), monthlyTicket, sconto, projektdays);
@@ -114,15 +112,15 @@ public class Fee {
 		if (drive) {
 			if (overnightStay == 0) { // Tägliches Pendeln
 				if (fee < minFee) { // Stundensatz
-					account = fee*hoursPerDay/sconto - (consumption/100 + fuelConsumption/100 * fuelprice) * distance * 2;
+					account = fee*hoursPerDay/sconto - consumption * distance * 2;
 				} else { // Tagessatz
-					account = fee*factorWorkingHours(workingHours, hoursPerDay)/sconto - (consumption/100 + fuelConsumption/100 * fuelprice) * distance * 2;
+					account = fee*factorWorkingHours(workingHours, hoursPerDay)/sconto - consumption * distance * 2;
 				}
 			} else { // Wöchentliches Pendeln
 				if (fee < minFee) { // Stundensatz
-					account = fee*hoursPerDay/sconto - (consumption/100 + fuelConsumption/100 * fuelprice) * distance * 2 + overnightStay * hotelCosts;
+					account = fee*hoursPerDay/sconto - consumption * distance * 2 + overnightStay * hotelCosts;
 				} else { // Tagessatz
-					account = fee*factorWorkingHours(workingHours, hoursPerDay)/sconto - (consumption/100 + fuelConsumption/100 * fuelprice) * distance * 2 + overnightStay * hotelCosts;
+					account = fee*factorWorkingHours(workingHours, hoursPerDay)/sconto - consumption * distance * 2 + overnightStay * hotelCosts;
 				}
 			}
 		} else {
